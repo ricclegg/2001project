@@ -1,7 +1,9 @@
 baseURL = 'http://localhost:1313/'
 languageCode = 'en-us'
-title = '2OO1: Project Log'
+title = '2OO1: Project'
 theme = '2001project'
+publishDir = "docs"
+
 
 [params]
   author = "Richard Clegg"
