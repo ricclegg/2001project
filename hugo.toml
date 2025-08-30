@@ -1,4 +1,5 @@
-baseURL = 'http://localhost:1313/'
+# baseURL = 'http://localhost:1313/'
+baseURL = 'https://ricclegg.github.io/2001project/'
 languageCode = 'en-us'
 title = '2OO1: Project'
 theme = '2001project'
