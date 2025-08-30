@@ -7,12 +7,15 @@
   
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&family=League+Spartan:wght@400;500;700&display=swap" rel="stylesheet">
 
-
   <link rel="stylesheet" href="https://ricclegg.github.io/2001project/css/style.css">
 </head>
 <body>
-  <header class="site-header">
+  
+
+
+<header class="site-header">
   <div class="site-header-inner">
+
     <div class="site-title">
       <a href="https://ricclegg.github.io/2001project/">
         <span class="title-line large">2OO1:</span>
@@ -20,12 +23,20 @@
       </a>
     </div>
 
-    <nav class="site-nav">
-      <a href="https://ricclegg.github.io/2001project/posts/">Posts</a>
-      <a href="https://ricclegg.github.io/2001project/about/">About</a>
-    </nav>
+    <div class="header-right">
+      <div class="dark-mode-toggle">
+        <button id="dark-mode-toggle" class="icon-button" aria-label="Toggle dark mode">◐</button>
+      </div>
+
+      <nav class="site-nav">
+        <a href="https://ricclegg.github.io/2001project/posts/">Posts</a>
+        <a href="https://ricclegg.github.io/2001project/about/">About</a>
+      </nav>
+    </div>
+
   </div>
 </header>
+
 
   <main>
     
@@ -49,5 +60,26 @@
 
 
   </main>
+
+
+<script>
+  const toggleBtn = document.getElementById('dark-mode-toggle');
+  const body = document.body;
+
+  
+  if (localStorage.getItem('theme') === 'dark') {
+    body.classList.add('dark-mode');
+  }
+
+  
+  toggleBtn.addEventListener('click', () => {
+    body.classList.toggle('dark-mode');
+    if (body.classList.contains('dark-mode')) {
+      localStorage.setItem('theme', 'dark');
+    } else {
+      localStorage.setItem('theme', 'light');
+    }
+  });
+</script>
 </body>
 </html>

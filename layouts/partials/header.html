@@ -1,4 +1,4 @@
-<header class="site-header">
+<!-- <header class="site-header">
   <div class="site-header-inner">
     <div class="site-title">
       <a href="{{ "/" | relURL }}">
@@ -8,8 +8,42 @@
     </div>
 
     <nav class="site-nav">
-      <a href="{{ "/posts/" | relURL }}">Posts</a>
-      <a href="{{ "/about/" | relURL }}">About</a>
+      # Dark mode toggle on its own row
+      <div class="dark-mode-toggle-row">
+        <button id="dark-mode-toggle" class="icon-button" aria-label="Toggle dark mode">◐</button>
+      </div>
+
+      # Navigation links 
+      <div class="site-links">
+        <a href="{{ "/posts/" | relURL }}">Posts</a>
+        <a href="{{ "/about/" | relURL }}">About</a>
+      </div>
     </nav>
+  </div>
+</header>
+ -->
+
+
+<header class="site-header">
+  <div class="site-header-inner">
+
+    <div class="site-title">
+      <a href="{{ "/" | relURL }}">
+        <span class="title-line large">2OO1:</span>
+        <span class="title-line small">Project</span>
+      </a>
+    </div>
+
+    <div class="header-right">
+      <div class="dark-mode-toggle">
+        <button id="dark-mode-toggle" class="icon-button" aria-label="Toggle dark mode">◐</button>
+      </div>
+
+      <nav class="site-nav">
+        <a href="{{ "/posts/" | relURL }}">Posts</a>
+        <a href="{{ "/about/" | relURL }}">About</a>
+      </nav>
+    </div>
+
   </div>
 </header>
