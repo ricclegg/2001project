@@ -1,0 +1,8 @@
+baseURL = 'http://localhost:1313/'
+languageCode = 'en-us'
+title = '2OO1: Project Log'
+theme = '2001project'
+
+[params]
+  author = "Richard Clegg"
+  description = "A log of my \"2OO1: Project\" recreation journey."
