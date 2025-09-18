@@ -1,0 +1,225 @@
+{
+    "posts":  [
+                  {
+                      "slug":  "blueprint-dimensions",
+                      "file":  "content/posts/blueprint-dimensions/index.md",
+                      "dir":  "content/posts/blueprint-dimensions/",
+                      "title":  "\"Blueprint Dimensions (Working)\"",
+                      "date":  "2025-09-14",
+                      "tags":  {
+                                   "value":  [
+                                                 "measurements",
+                                                 "scale",
+                                                 "station5"
+                                             ],
+                                   "Count":  3
+                               },
+                      "description":  "\"Dimensions for key assets; will be refined.\"",
+                      "cover":  "content/posts/blueprint-dimensions/cover.jpg",
+                      "images":  "content/posts/blueprint-dimensions/cover.jpg"
+                  },
+                  {
+                      "slug":  "camera-matching",
+                      "file":  "content/posts/camera-matching/index.md",
+                      "dir":  "content/posts/camera-matching/",
+                      "title":  "\"Camera Matching Strategy\"",
+                      "date":  "2025-09-10",
+                      "tags":  {
+                                   "value":  [
+                                                 "camera",
+                                                 "matchmove",
+                                                 "lenses"
+                                             ],
+                                   "Count":  3
+                               },
+                      "description":  "\"Focal length and FOV estimation.\"",
+                      "cover":  "content/posts/camera-matching/cover.jpg",
+                      "images":  "content/posts/camera-matching/cover.jpg"
+                  },
+                  {
+                      "slug":  "docking-animation-plan",
+                      "file":  "content/posts/docking-animation-plan/index.md",
+                      "dir":  "content/posts/docking-animation-plan/",
+                      "title":  "\"Docking Animation Plan\"",
+                      "date":  "2025-09-09",
+                      "tags":  {
+                                   "value":  [
+                                                 "animation",
+                                                 "timing",
+                                                 "blocking"
+                                             ],
+                                   "Count":  3
+                               },
+                      "description":  "\"Beats for the docking shot.\"",
+                      "cover":  "content/posts/docking-animation-plan/cover.jpg",
+                      "images":  "content/posts/docking-animation-plan/cover.jpg"
+                  },
+                  {
+                      "slug":  "kickoff-log",
+                      "file":  "content/posts/kickoff-log/index.md",
+                      "dir":  "content/posts/kickoff-log/",
+                      "title":  "\"Project Kickoff \u0026 Goals\"",
+                      "date":  "2025-09-16",
+                      "tags":  {
+                                   "value":  [
+                                                 "log",
+                                                 "meta",
+                                                 "setup"
+                                             ],
+                                   "Count":  3
+                               },
+                      "description":  "\"Why this project exists, constraints, success criteria, and the first checklist.\"",
+                      "cover":  "content/posts/kickoff-log/cover.jpg",
+                      "images":  [
+                                     "content/posts/kickoff-log/cover.jpg",
+                                     "content/posts/kickoff-log/milestone.jpg"
+                                 ]
+                  },
+                  {
+                      "slug":  "nuke-template",
+                      "file":  "content/posts/nuke-template/index.md",
+                      "dir":  "content/posts/nuke-template/",
+                      "title":  "\"Nuke: Minimal Template\"",
+                      "date":  "2025-09-08",
+                      "tags":  {
+                                   "value":  [
+                                                 "nuke",
+                                                 "comp",
+                                                 "templates"
+                                             ],
+                                   "Count":  3
+                               },
+                      "description":  "\"Comp template.\"",
+                      "cover":  "content/posts/nuke-template/cover.jpg",
+                      "images":  "content/posts/nuke-template/cover.jpg"
+                  },
+                  {
+                      "slug":  "orion-modeling-notes",
+                      "file":  "content/posts/orion-modeling-notes/index.md",
+                      "dir":  "content/posts/orion-modeling-notes/",
+                      "title":  "\"Orion Modeling Notes (Blender)\"",
+                      "date":  "2025-09-13",
+                      "tags":  {
+                                   "value":  [
+                                                 "blender",
+                                                 "modeling",
+                                                 "orion"
+                                             ],
+                                   "Count":  3
+                               },
+                      "description":  "\"Topology, modifiers, and workflow.\"",
+                      "cover":  "content/posts/orion-modeling-notes/cover.jpg",
+                      "images":  "content/posts/orion-modeling-notes/cover.jpg"
+                  },
+                  {
+                      "slug":  "performance-benchmarks",
+                      "file":  "content/posts/performance-benchmarks/index.md",
+                      "dir":  "content/posts/performance-benchmarks/",
+                      "title":  "\"Performance Benchmarks\"",
+                      "date":  "2025-09-06",
+                      "tags":  {
+                                   "value":  [
+                                                 "performance",
+                                                 "render",
+                                                 "hardware"
+                                             ],
+                                   "Count":  3
+                               },
+                      "description":  "\"Tracking render performance.\"",
+                      "cover":  "content/posts/performance-benchmarks/cover.jpg",
+                      "images":  "content/posts/performance-benchmarks/cover.jpg"
+                  },
+                  {
+                      "slug":  "reference-sources",
+                      "file":  "content/posts/reference-sources/index.md",
+                      "dir":  "content/posts/reference-sources/",
+                      "title":  "\"Reference Sources for Satellites \u0026 Station V\"",
+                      "date":  "2025-09-15",
+                      "tags":  {
+                                   "value":  [
+                                                 "reference",
+                                                 "stills",
+                                                 "blueprints"
+                                             ],
+                                   "Count":  3
+                               },
+                      "description":  "\"Where I’m pulling stills, orthos, and measurements for accuracy.\"",
+                      "cover":  "content/posts/reference-sources/cover.jpg",
+                      "images":  [
+                                     "content/posts/reference-sources/cover.jpg",
+                                     "content/posts/reference-sources/still.jpg"
+                                 ]
+                  },
+                  {
+                      "slug":  "render-tests-aces",
+                      "file":  "content/posts/render-tests-aces/index.md",
+                      "dir":  "content/posts/render-tests-aces/",
+                      "title":  "\"Render Tests \u0026 ACES Notes\"",
+                      "date":  "2025-09-11",
+                      "tags":  {
+                                   "value":  [
+                                                 "aces",
+                                                 "render",
+                                                 "color"
+                                             ],
+                                   "Count":  3
+                               },
+                      "description":  "\"Notes on OCIO config.\"",
+                      "cover":  "content/posts/render-tests-aces/cover.jpg",
+                      "images":  "content/posts/render-tests-aces/cover.jpg"
+                  },
+                  {
+                      "slug":  "station5-tiling-shaders",
+                      "file":  "content/posts/station5-tiling-shaders/index.md",
+                      "dir":  "content/posts/station5-tiling-shaders/",
+                      "title":  "\"Station V: Tiling Shaders\"",
+                      "date":  "2025-09-12",
+                      "tags":  {
+                                   "value":  [
+                                                 "lookdev",
+                                                 "shading",
+                                                 "cycles"
+                                             ],
+                                   "Count":  3
+                               },
+                      "description":  "\"Procedural tiling approach.\"",
+                      "cover":  "content/posts/station5-tiling-shaders/cover.jpg",
+                      "images":  "content/posts/station5-tiling-shaders/cover.jpg"
+                  },
+                  {
+                      "slug":  "texture-baking-workflow",
+                      "file":  "content/posts/texture-baking-workflow/index.md",
+                      "dir":  "content/posts/texture-baking-workflow/",
+                      "title":  "\"Texture Baking Workflow\"",
+                      "date":  "2025-09-07",
+                      "tags":  {
+                                   "value":  [
+                                                 "textures",
+                                                 "baking",
+                                                 "pipeline"
+                                             ],
+                                   "Count":  3
+                               },
+                      "description":  "\"Bake IDs and AO.\"",
+                      "cover":  "content/posts/texture-baking-workflow/cover.jpg",
+                      "images":  "content/posts/texture-baking-workflow/cover.jpg"
+                  },
+                  {
+                      "slug":  "todo-sep-2025",
+                      "file":  "content/posts/todo-sep-2025/index.md",
+                      "dir":  "content/posts/todo-sep-2025/",
+                      "title":  "\"TODO — September 2025\"",
+                      "date":  "2025-09-05",
+                      "tags":  {
+                                   "value":  [
+                                                 "planning",
+                                                 "todo"
+                                             ],
+                                   "Count":  2
+                               },
+                      "description":  "\"Checklist for September.\"",
+                      "cover":  "content/posts/todo-sep-2025/cover.jpg",
+                      "images":  "content/posts/todo-sep-2025/cover.jpg"
+                  }
+              ]
+}
