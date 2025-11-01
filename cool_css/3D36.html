@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ORION → STATION V — Hero Wireframe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Sono:wght@400;600;700&family=Source+Code+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#06090c; --ink:#ffffff;
+      --ghost:rgba(255,255,255,.88);
+      --faint:rgba(255,255,255,.55);
+      --alt:rgba(255,255,255,.35);
+      --section-gap:10px; --max-w:1000px;
+    }
+    html,body{ margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+      font-family:"Source Code Pro",monospace;font-size:18px;font-variant-numeric: tabular-nums; }
+    .wrap{ min-height:100vh; display:flex; align-items:flex-start; justify-content:center; }
+    .wrap.vcenter{ align-items:center; }
+    .stack{ width:min(var(--max-w),95vw); display:flex; flex-direction:column; gap:var(--section-gap); }
+    .header{ padding:14px 16px; background:var(--bg); display:flex; flex-direction:column; align-items:flex-start; }
+    .title-main{ margin:0; padding:.1em .3em .2em .5em; font-size:2.5rem; font-family:"Michroma",sans-serif;
+      background:var(--ghost); color:var(--bg); line-height:1.05; -webkit-text-stroke:3px var(--bg); paint-order:stroke fill;
+      font-weight:bolder; transform:scaleX(1.1); letter-spacing:.1em; border-radius:5px; }
+    .title-sub{ margin-top:.4em; font-family:"Sono",sans-serif; font-size:1.1rem; font-weight:600; text-transform:uppercase;
+      letter-spacing:.15em; color:var(--ghost); transform:scaleX(1.05); margin-bottom:1.8rem; }
+    .window{ width:100%; max-width:var(--max-w); aspect-ratio:1000/650; background:var(--bg);
+      border:1px solid var(--ghost); overflow:hidden; }
+    .content{ position:relative; width:100%; height:100% }
+    canvas{ width:100%; height:100%; display:block }
+    .hud{ width:100%; align-self:end; font-size:.95rem; letter-spacing:.2rem; color:var(--ghost); opacity:.95; text-align:right;
+      font-family:"Source Code Pro",monospace; font-variant-numeric: tabular-nums; line-height:1.5rem; display:flex; flex-direction:column; margin-top:1.25rem; }
+    .hud .hud-group{ display:inline-block; text-align:right; align-self:flex-end; }
+    .hud .sep{ border-top:2px solid var(--faint); height:0; width:100%; margin:4px 0 6px; }
+    body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+      background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.05) 0%, rgba(0,0,0,.65) 100%); }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="wrap">
+    <div class="stack" id="stack">
+      <section class="header">
+        <h1 class="title-main">2001</h1>
+        <h2 class="title-sub">: A VFX PROJECT</h2>
+      </section>
+
+      <section class="window">
+        <div class="content">
+          <canvas id="cv" width="1000" height="650"></canvas>
+        </div>
+      </section>
+
+      <section class="hud" id="hud">
+        <div class="hud-group"><div>CO/ORD;PLOT 3</div><div class="sep"></div></div>
+        <div>θY   0.00°</div>
+        <div>θX   0.00°</div>
+        <div>spin 0.00°</div>
+      </section>
+    </div>
+  </div>
+
+<script>
+/* ===== Layout ===== */
+const wrap = document.getElementById('wrap');
+const stack = document.getElementById('stack');
+function adjustLayout(){ const fits = stack.offsetHeight + 1 <= window.innerHeight; wrap.classList.toggle('vcenter', fits); }
+addEventListener('load', adjustLayout); addEventListener('resize', adjustLayout);
+
+/* ===== Canvas ===== */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const HUD = document.getElementById('hud');
+const W = cv.width, H = cv.height;
+
+/* ===== Camera: slow orbit ===== */
+function deg(a){ return a*Math.PI/180; }
+const cam = { thetaY:deg(25), thetaX:deg(18), dist:980, f:1100, cx:W/2, cy:H/2 };
+const camOrbitRate = deg(0.10);
+
+/* ===== Station “hero” config ===== */
+const STATION = {
+  // Wheel placement
+  gapY: 78,            // half-spacing between ring planes
+  spinRate: deg(0.55),
+  // Rim radii (outer look like a deep band)
+  rimOuterR: 250,      // outer edge of band
+  rimInnerR: 210,      // inner edge of band
+  innerServiceR: 175,  // small inner ring inside band
+  // Band detailing
+  bandLines: 5,        // extra concentric lines to sell thickness
+  bandRibEvery: 9,     // small radial tick lines (deg)
+  bandRibDepth: 10,
+  // Wedge modules around the service ring
+  moduleEvery: 12,     // degrees
+  moduleDepth: 20,     // radial width of a wedge
+  moduleAxial: 14,     // tiny “height” drawn as a short chord
+  // Panel seams / hatch marks on the rim band
+  seamEvery: 18,       // deg
+  seamWidth: 6,        // deg span
+  // Spokes & hub (toggle spokes to match ref)
+  showSpokes: true,
+  spokeWidth: 12,      // visual width (two parallel lines)
+  hubLatheR0: 36,      // hub waist radius
+  hubLatheR1: 64,      // hub shoulder radius
+  hubLatheR2: 46,      // cap radius
+  hubRings: 9,         // number of rings in the lathe profile
+  // Dock plate at world origin (0,0,0)
+  dockRadius: 40,      // face plate circle
+  dockSlotW: 52,       // slot width on plate
+  dockSlotH: 18,       // slot height
+};
+
+/* We keep the docking face at the origin by translating the whole station so that the
+   lower wheel's inner-service ring at ang=0 meets (0,0,0). */
+{
+  const dockR = STATION.innerServiceR;
+  const yDock = -STATION.gapY;
+  const tdir = [1,0,0];
+  STATION.center = [-tdir[0]*dockR, -yDock, -tdir[2]*dockR]; // world translate
+  STATION.phase0 = 0; // initial ring phase (deg)
+}
+
+/* ===== Math ===== */
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const scale=(v,k)=>[v[0]*k,v[1]*k,v[2]*k];
+const rotY=(p,t)=>{const c=Math.cos(t),s=Math.sin(t);return [p[0]*c+p[2]*s,p[1],-p[0]*s+p[2]*c]};
+const rotX=(p,t)=>{const c=Math.cos(t),s=Math.sin(t);return [p[0],p[1]*c-p[2]*s,p[1]*s+p[2]*c]};
+
+function project(p){
+  let q = rotY(p, cam.thetaY); q = rotX(q, cam.thetaX);
+  const z = q[2] + cam.dist; if(!isFinite(z) || Math.abs(z) < 1e-3) return null;
+  return [cam.cx + cam.f*q[0]/z, cam.cy - cam.f*q[1]/z, z];
+}
+function strokeStrip(pts){
+  ctx.beginPath(); let pen=false;
+  for(const p of pts){ const q=project(p); if(q){ const [x,y]=q; pen?ctx.lineTo(x,y):ctx.moveTo(x,y); pen=true; } else pen=false; }
+  ctx.stroke();
+}
+function circleStrip(C,R,y,a0,a1,step=6){
+  const pts=[]; for(let a=a0; a<=a1+1e-6; a+=step){ const r=deg(a); pts.push(add(C,[R*Math.cos(r),y,R*Math.sin(r)])); } return pts;
+}
+
+/* ===== Geometry builders ===== */
+function buildWheel(C, y, phaseDeg){
+  const g = { band:[], ribs:[], seams:[], serviceRing:[], modules:[], spokes:[] };
+
+  // Band concentric lines to imply thickness
+  for(let i=0;i<STATION.bandLines;i++){
+    const t=i/(STATION.bandLines-1||1);
+    const R = STATION.rimInnerR + t*(STATION.rimOuterR - STATION.rimInnerR);
+    g.band.push(circleStrip(C, R, y, 0+phaseDeg, 360+phaseDeg, 4));
+  }
+
+  // Tiny radial ribs on band
+  for(let a=0; a<360; a+=STATION.bandRibEvery){
+    const r=deg(a+phaseDeg), d=[Math.cos(r),0,Math.sin(r)];
+    const p0 = add(C,[d[0]*(STATION.rimOuterR-STATION.bandRibDepth), y, d[2]*(STATION.rimOuterR-STATION.bandRibDepth)]);
+    const p1 = add(C,[d[0]*(STATION.rimOuterR), y, d[2]*(STATION.rimOuterR)]);
+    g.ribs.push([p0,p1]);
+  }
+
+  // Panel seams on band (short arc segments)
+  for(let a=0; a<360; a+=STATION.seamEvery){
+    const a0 = a - STATION.seamWidth*0.5 + phaseDeg;
+    const a1 = a + STATION.seamWidth*0.5 + phaseDeg;
+    g.seams.push(circleStrip(C, STATION.rimOuterR-2, y, a0, a1, 3));
+  }
+
+  // Inner service ring + wedges (modules)
+  g.serviceRing.push(circleStrip(C, STATION.innerServiceR, y, 0+phaseDeg, 360+phaseDeg, 6));
+
+  for(let a=0; a<360; a+=STATION.moduleEvery){
+    const a0 = a+phaseDeg, a1 = a+STATION.moduleEvery*0.8+phaseDeg;
+    const r0 = STATION.innerServiceR - STATION.moduleDepth;
+    const r1 = STATION.innerServiceR + 2;
+    const arcOuter = circleStrip(C, r1, y, a0, a1, 4);
+    const arcInner = circleStrip(C, r0, y, a1, a0, 4);
+    const d0 = deg(a0), d1 = deg(a1);
+    const pA = add(C,[Math.cos(d0)*r1, y, Math.sin(d0)*r1]);
+    const pB = add(C,[Math.cos(d0)*r0, y, Math.sin(d0)*r0]);
+    const pC = add(C,[Math.cos(d1)*r0, y, Math.sin(d1)*r0]);
+    const pD = add(C,[Math.cos(d1)*r1, y, Math.sin(d1)*r1]);
+    g.modules.push([pA,pB,...arcInner,pC,pD,...arcOuter,pA]);
+  }
+
+  // 4 main spokes (optional)
+  if(STATION.showSpokes){
+    const halfW = STATION.spokeWidth/2;
+    for(let a of [0,90,180,270]){
+      const r=deg(a+phaseDeg), d=[Math.cos(r),0,Math.sin(r)];
+      const n=[-d[2],0,d[0]]; // perp
+      const rootR = STATION.hubLatheR1; // leave space for hub shoulder
+      const start = add(C,[d[0]*rootR, y*0.45, d[2]*rootR]);
+      const end   = add(C,[d[0]*(STATION.innerServiceR-6), y, d[2]*(STATION.innerServiceR-6)]);
+      // two parallel lines
+      const L1a = add(start, scale(n, -halfW)), L1b = add(end, scale(n, -halfW));
+      const L2a = add(start, scale(n,  halfW)), L2b = add(end, scale(n,  halfW));
+      g.spokes.push([L1a,L1b], [L2a,L2b]);
+    }
+  }
+
+  return g;
+}
+
+function buildHubLathe(C){
+  const yL = -STATION.gapY, yU = +STATION.gapY;
+  const rings=[];
+  for(let i=0;i<STATION.hubRings;i++){
+    const t = i/(STATION.hubRings-1);
+    const y = yL + t*(yU-yL);
+    // hand-shaped profile: cones to shoulders
+    const mid = 0.5;
+    let R;
+    if(t < mid*0.5)         R = STATION.hubLatheR2 + (STATION.hubLatheR1-STATION.hubLatheR2)*(t/(mid*0.5));
+    else if(t < mid)        R = STATION.hubLatheR1 - (STATION.hubLatheR1-STATION.hubLatheR0)*((t-mid*0.5)/(mid*0.5));
+    else if(t < mid*1.5)    R = STATION.hubLatheR0 + (STATION.hubLatheR1-STATION.hubLatheR0)*((t-mid)/(mid*0.5));
+    else                    R = STATION.hubLatheR1 - (STATION.hubLatheR1-STATION.hubLatheR2)*((t-mid*1.5)/(mid*0.5));
+    rings.push(circleStrip(C, R, y, 0, 360, 10));
+  }
+  return rings;
+}
+
+function buildBridges(C, phaseDeg){
+  const yL = -STATION.gapY, yU = +STATION.gapY;
+  const R = STATION.rimOuterR - 8;
+  const lines = [];
+  for(const a of [0,120,240]){
+    const r=deg(a+phaseDeg), d=[Math.cos(r),0,Math.sin(r)];
+    const pLow = add(C,[d[0]*R, yL, d[2]*R]);
+    const pUp  = add(C,[d[0]*R, yU, d[2]*R]);
+    lines.push([pLow,pUp]);
+  }
+  return lines;
+}
+
+function buildStation(phaseDeg){
+  const C = STATION.center;
+  const wheelLower = buildWheel(C, -STATION.gapY, phaseDeg);
+  const wheelUpper = buildWheel(C, +STATION.gapY, phaseDeg);
+  const hub = buildHubLathe(C);
+  const bridges = buildBridges(C, phaseDeg);
+
+  // Dock plate at origin on lower wheel
+  const dR = STATION.dockRadius;
+  const dock = circleStrip([0,0,0], dR, 0, 0, 360, 10); // centered world origin
+  // slot on plate (simple rounded rectangle illusion)
+  const slotW = STATION.dockSlotW, slotH = STATION.dockSlotH;
+  const slot = [
+    [-slotW/2, -slotH/2, 0], [ slotW/2, -slotH/2, 0],
+    [ slotW/2,  slotH/2, 0], [-slotW/2,  slotH/2, 0], [-slotW/2, -slotH/2, 0]
+  ];
+
+  return { C, wheelLower, wheelUpper, hub, bridges, dock, slot };
+}
+
+/* ===== Draw ===== */
+function drawStation(phaseDeg){
+  const css = getComputedStyle(document.documentElement);
+  const colEdge = css.getPropertyValue('--ghost') || 'rgba(255,255,255,.88)';
+  const colFaint= css.getPropertyValue('--faint') || 'rgba(255,255,255,.55)';
+  const colAlt  = 'rgba(255,255,255,.35)';
+
+  const s = buildStation(phaseDeg);
+
+  // Far-to-near painter's order (coarse): upper wheel first if mostly behind.
+  const order = s.C[1] > 0 ? ['wheelUpper','wheelLower'] : ['wheelLower','wheelUpper'];
+
+  // Hub lathe
+  ctx.strokeStyle = colAlt; ctx.lineWidth = 1.2;
+  s.hub.forEach(r=>strokeStrip(r));
+
+  // Wheels
+  order.forEach(key=>{
+    const w = s[key];
+    ctx.strokeStyle = colEdge; ctx.lineWidth = 2.0;          // band lines
+    w.band.forEach(seg=>strokeStrip(seg));
+    ctx.strokeStyle = colFaint; ctx.lineWidth = 1.2;          // ribs/seams
+    w.ribs.forEach(l=>strokeStrip(l));
+    w.seams.forEach(seg=>strokeStrip(seg));
+    ctx.strokeStyle = colEdge; ctx.lineWidth = 1.7;           // service ring
+    w.serviceRing.forEach(seg=>strokeStrip(seg));
+    ctx.strokeStyle = colEdge; ctx.lineWidth = 1.2;           // modules
+    w.modules.forEach(poly=>strokeStrip(poly));
+    if(STATION.showSpokes){
+      ctx.strokeStyle = colFaint; ctx.lineWidth = 1.5;
+      w.spokes.forEach(l=>strokeStrip(l));
+    }
+  });
+
+  // Bridges between wheels
+  ctx.strokeStyle = colFaint; ctx.lineWidth = 1.6;
+  s.bridges.forEach(l=>strokeStrip(l));
+
+  // Dock plate & slot at origin
+  ctx.strokeStyle = colEdge; ctx.lineWidth = 1.8; strokeStrip(s.dock);
+  ctx.strokeStyle = colEdge; ctx.lineWidth = 1.4; strokeStrip(s.slot);
+
+  // Tiny origin dot
+  const q0=project([0,0,0]); if(q0){ ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(q0[0],q0[1],3,0,Math.PI*2); ctx.fill(); }
+}
+
+/* ===== HUD ===== */
+function updateHUD(spin){
+  const fmt=v=>v.toFixed(2).padStart(6,' ');
+  HUD.innerHTML =
+    `<div class="hud-group"><div>CO/ORD;PLOT 3</div><div class="sep"></div></div>`+
+    `<div>θY ${fmt(cam.thetaY*180/Math.PI)}°</div>`+
+    `<div>θX ${fmt(cam.thetaX*180/Math.PI)}°</div>`+
+    `<div>spin ${fmt(((spin*180/Math.PI)%360+360)%360)}°</div>`;
+}
+
+/* ===== Animate ===== */
+const targetMs = 33;
+let spin = 0, last=0;
+function render(){ ctx.clearRect(0,0,W,H); drawStation(spin*180/Math.PI); updateHUD(spin); }
+function loop(ts){
+  if(ts-last>=targetMs){
+    spin += STATION.spinRate;       // station rotates
+    cam.thetaY += camOrbitRate;     // camera pans
+    render(); last=ts;
+  }
+  requestAnimationFrame(loop);
+}
+render(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

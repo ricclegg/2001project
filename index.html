@@ -4,233 +4,154 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ORION → STATION V — Canvas (Spin-Axis Docking)</title>
+
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Sono:wght@400;600;700&family=Source+Code+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Swatch variables moved out here (all --bg-col-... HSV triplets) -->
+  <link rel="stylesheet" href="supporting_files/swatches.css">
+
   <style>
-    :root{
-      /* Core UI tokens */
-      --bg:#171d32;
-      --ink:#ffffff;
-      --gridA:rgba(255,255,255,.28);
-      --gridB:rgba(255,255,255,.16);
-      --ghost:rgba(255,255,255,.70);
-      --faint:rgba(255,255,255,.45);
-      --alt:rgba(255,255,255,.55);
-      --section-gap:10px;
-      --max-w:1000px;
+  :root{
+    /* === Controls you’ll tweak === */
+    --bg-mode: solid;        /* random | solid */
+    --bg-solid: #020202;      /* used only when --bg-mode: solid */
+    --max-w: 800px;          /* cap the square window/canvas (e.g. 600px) */
 
-      /* ===== PALETTE (HSV triplets) ===== */
-      --bg-col-ATM-01: 342 100% 46%;
-      --bg-col-ATM-02: 300 1% 29%;
-      --bg-col-ATM-03: 217 68% 41%;
-      --bg-col-ATM-04: 216 76% 48%;
-      --bg-col-ATM-05: 198 87% 44%;
-      --bg-col-ATM-06: 180 58% 26%;
-      --bg-col-ATM-07: 291 23% 34%;
-      --bg-col-ATM-08: 213 78% 43%;
-      --bg-col-ATM-09: 342 100% 46%;
+    /* === Computed at runtime; the page uses this for background === */
+    --bg: #171d32;
 
-      --bg-col-CNT-01: 131 41% 33%;
-      --bg-col-CNT-02: 224 82% 46%;
-      --bg-col-CNT-03: 253 41% 34%;
-      --bg-col-CNT-04: 292 46% 32%;
-      --bg-col-CNT-05: 201 37% 42%;
-      --bg-col-CNT-06: 316 53% 30%;
-      --bg-col-CNT-07: 226 75% 56%;
-      --bg-col-CNT-08: 208 100% 39%;
-      --bg-col-CNT-09: 131 41% 33%;
+    /* define colors */
+    --gridA:rgba(255,255,255,.28);
+    --gridB:rgba(255,255,255,.16);
+    --colMain:rgba(255,255,255,.70);
+    --colFaint:rgba(255,255,255,.45);
+    --colAlt:rgba(255,100,100,0.55);
+    --section-gap:10px;
 
-      --bg-col-COM-01: 316 51% 34%;
-      --bg-col-COM-02: 206 95% 52%;
-      --bg-col-COM-03: 205 92% 28%;
-      --bg-col-COM-04: 263 52% 52%;
-      --bg-col-COM-05: 232 25% 13%;
-      --bg-col-COM-06: 177 100% 7%;
-      --bg-col-COM-07: 177 100% 7%;
-      --bg-col-COM-08: 177 100% 7%;
-      --bg-col-COM-09: 177 100% 7%;
-      --bg-col-COM-10: 264 10% 20%;
-      --bg-col-COM-11: 300 26% 40%;
-      --bg-col-COM-12: 264 10% 20%;
-      --bg-col-COM-13: 270 7% 23%;
-      --bg-col-COM-14: 270 7% 23%;
-      --bg-col-COM-15: 264 10% 20%;
-      --bg-col-COM-16: 272 39% 48%;
-      --bg-col-COM-17: 270 7% 23%;
-      --bg-col-COM-18: 285 46% 67%;
-      --bg-col-COM-19: 205 85% 47%;
-      --bg-col-COM-20: 316 51% 34%;
+    /* Scope & curve controls */
+    --scope: var(--colAlt);  /* #C65353 */
+    --scope-thickness: 5;     /* SVG stroke-width in device px (unitless OK) */
+    --bay-thickness: 2;       /* Canvas lineWidth in device px */
+  }
 
-      --bg-col-DMG-01: 342 100% 46%;
-      --bg-col-DMG-02: 277 43% 28%;
-      --bg-col-DMG-03: 291 38% 29%;
-      --bg-col-DMG-04: 231 82% 48%;
-      --bg-col-DMG-05: 231 82% 48%;
-      --bg-col-DMG-06: 231 82% 48%;
-      --bg-col-DMG-07: 231 82% 48%;
-      --bg-col-DMG-08: 231 82% 48%;
-      --bg-col-DMG-09: 231 82% 48%;
-      --bg-col-DMG-10: 231 82% 48%;
-      --bg-col-DMG-11: 231 82% 48%;
-      --bg-col-DMG-12: 231 82% 48%;
-      --bg-col-DMG-13: 231 82% 48%;
-      --bg-col-DMG-14: 231 82% 48%;
-      --bg-col-DMG-15: 0 0% 0%;
-      --bg-col-DMG-16: 0 0% 0%;
-      --bg-col-DMG-17: 0 0% 0%;
-      --bg-col-DMG-18: 177 100% 7%;
-      --bg-col-DMG-19: 177 100% 7%;
-      --bg-col-DMG-20: 177 100% 7%;
-      --bg-col-DMG-21: 220 62% 38%;
-      --bg-col-DMG-22: 209 65% 31%;
-      --bg-col-DMG-23: 212 81% 47%;
-      --bg-col-DMG-24: 217 73% 50%;
+  html,body{
+    margin:0;
+    min-height:100%;
+    background:var(--bg);
+    color:var(--colMain);
+    font-family:"Source Code Pro",monospace;
+    font-size:18px;
+    font-variant-numeric: tabular-nums;
+    position: relative;
+    overflow-x: hidden;
+  }
 
-      --bg-col-FLX-01: 226 73% 44%;
-      --bg-col-FLX-02: 202 85% 33%;
-      --bg-col-FLX-03: 333 45% 39%;
-      --bg-col-FLX-04: 333 45% 39%;
-      --bg-col-FLX-05: 333 45% 39%;
-      --bg-col-FLX-06: 216 68% 51%;
-      --bg-col-FLX-07: 212 93% 32%;
-      --bg-col-FLX-08: 200 65% 9%;
-      --bg-col-FLX-09: 316 33% 23%;
-      --bg-col-FLX-10: 226 73% 44%;
+  /* Master wrapper */
+  .wrap{ min-height:100vh; display:flex; align-items:flex-start; justify-content:center; }
+  .wrap.vcenter{ align-items:center; }
+  .stack{ width: min(var(--max-w), 95vw); display:flex; flex-direction:column; gap: var(--section-gap); }
 
-      --bg-col-GDE-01: 223 72% 47%;
-      --bg-col-GDE-02: 322 44% 22%;
-      --bg-col-GDE-03: 322 44% 22%;
-      --bg-col-GDE-04: 322 44% 22%;
-      --bg-col-GDE-05: 223 75% 40%;
-      --bg-col-GDE-06: 267 15% 24%;
-      --bg-col-GDE-07: 267 15% 24%;
-      --bg-col-GDE-08: 267 15% 24%;
-      --bg-col-GDE-09: 314 48% 52%;
-      --bg-col-GDE-10: 314 48% 52%;
-      --bg-col-GDE-11: 314 48% 52%;
-      --bg-col-GDE-12: 314 48% 52%;
-      --bg-col-GDE-13: 314 48% 52%;
-      --bg-col-GDE-14: 225 67% 39%;
-      --bg-col-GDE-15: 206 68% 33%;
-      --bg-col-GDE-16: 212 69% 51%;
-      --bg-col-GDE-17: 223 72% 47%;
+  /* HEADER */
+  .header{ padding:14px 16px; background:var(--bg); display:flex; flex-direction:column; align-items:flex-start; }
+  .title-main {
+    margin:0; padding:0.1em 0.3em 0.2em 0.5em; font-size:2.5rem; font-family:"Michroma",sans-serif;
+    background: var(--colMain); color: var(--bg); line-height:1.1; -webkit-text-stroke: 3px var(--bg); paint-order: stroke fill;
+    font-weight:bolder; transform:scaleX(1.1); letter-spacing:0.1em; border-radius:5px;
+  }
+  .title-sub {
+    margin-top:.4em;
+    font-family:"Sono",sans-serif;
+    font-size:1.25rem;
+    font-weight:500;
+    text-transform:uppercase;
+    letter-spacing:.15em;
+    color:var(--colMain);
+    transform:scaleX(1.05);
+    margin-bottom:2.25rem;
+    padding-left:0.5em; /* left-aligns with title-main's left padding */
+  }
 
-      --bg-col-HIB-01: 173 89% 22%;
-      --bg-col-HIB-02: 220 82% 13%;
-      --bg-col-HIB-03: 220 82% 13%;
-      --bg-col-HIB-04: 221 82% 40%;
-      --bg-col-HIB-05: 189 52% 26%;
-      --bg-col-HIB-06: 262 41% 26%;
-      --bg-col-HIB-07: 262 30% 32%;
-      --bg-col-HIB-08: 227 72% 47%;
-      --bg-col-HIB-09: 338 78% 37%;
-      --bg-col-HIB-10: 0 0% 0%;
-      --bg-col-HIB-11: 355 90% 54%;
-      --bg-col-HIB-12: 18 85% 72%;
-      --bg-col-HIB-13: 355 90% 54%;
-      --bg-col-HIB-14: 173 89% 22%;
+  /* WINDOW */
+  .window{
+    width:100%;
+    max-width: var(--max-w);
+    aspect-ratio: 1 / 1;   /* force square */
+    background:var(--bg);
+    border:0px solid var(--colMain);
+    border-radius:0;
+    overflow:hidden;
+  }
 
-      --bg-col-LIF-01: 340 79% 46%;
-      --bg-col-LIF-02: 207 90% 54%;
-      --bg-col-LIF-03: 218 67% 41%;
-      --bg-col-LIF-04: 240 26% 32%;
-      --bg-col-LIF-05: 212 81% 47%;
-      --bg-col-LIF-06: 302 38% 29%;
-      --bg-col-LIF-07: 232 25% 13%;
-      --bg-col-LIF-08: 340 79% 46%;
+  /* Content layers */
+  .content{ position:relative; }
 
-      --bg-col-MEM-01: 211 74% 27%;
-      --bg-col-MEM-02: 195 72% 53%;
-      --bg-col-MEM-03: 359 62% 30%;
-      --bg-col-MEM-04: 200 47% 40%;
-      --bg-col-MEM-05: 200 47% 40%;
-      --bg-col-MEM-06: 200 47% 40%;
-      --bg-col-MEM-07: 208 62% 28%;
-      --bg-col-MEM-08: 290 43% 26%;
-      --bg-col-MEM-09: 210 54% 31%;
-      --bg-col-MEM-10: 198 77% 40%;
-      --bg-col-MEM-11: 211 74% 27%;
+  /* Scope overlay (behind canvas, static to camera) */
+  .scope{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+    z-index:1; /* behind canvas */
+  }
 
-      --bg-col-NAV-01: 274 55% 31%;
-      --bg-col-NAV-02: 229 43% 30%;
-      --bg-col-NAV-03: 229 43% 30%;
-      --bg-col-NAV-04: 229 43% 30%;
-      --bg-col-NAV-05: 229 43% 30%;
-      --bg-col-NAV-06: 230 46% 26%;
-      --bg-col-NAV-07: 249 48% 16%;
-      --bg-col-NAV-08: 217 52% 10%;
-      --bg-col-NAV-09: 51 58% 62%;
-      --bg-col-NAV-10: 215 72% 42%;
-      --bg-col-NAV-11: 213 61% 21%;
-      --bg-col-NAV-12: 274 55% 31%;
+  .scope svg{
+    width:100%;
+    height:100%;
+  }
 
-      --bg-col-NUC-01: 228 71% 16%;
-      --bg-col-NUC-02: 205 92% 44%;
-      --bg-col-NUC-03: 212 55% 36%;
-      --bg-col-NUC-04: 219 91% 38%;
-      --bg-col-NUC-05: 191 63% 32%;
-      --bg-col-NUC-06: 212 88% 40%;
-      --bg-col-NUC-07: 207 82% 42%;
-      --bg-col-NUC-08: 276 35% 30%;
-      --bg-col-NUC-09: 228 71% 16%;
+  /* Color + thickness for scope; add class="ink" to the white parts in SVG */
+  .scope svg *{
+    stroke: var(--scope) !important;
+    stroke-width: var(--scope-thickness) !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
 
-      --bg-col-VEH-01: 223 72% 47%;
-      --bg-col-VEH-02: 305 31% 29%;
-      --bg-col-VEH-03: 187 61% 29%;
-      --bg-col-VEH-04: 209 90% 47%;
-      --bg-col-VEH-05: 207 53% 40%;
-      --bg-col-VEH-06: 219 51% 46%;
-      --bg-col-VEH-07: 219 51% 46%;
-      --bg-col-VEH-08: 219 51% 46%;
-      --bg-col-VEH-09: 219 51% 46%;
-      --bg-col-VEH-10: 219 51% 46%;
-      --bg-col-VEH-11: 219 71% 45%;
-      --bg-col-VEH-12: 227 70% 47%;
-    }
+  .scope svg .ink{
+    stroke: var(--colMain) !important;
+  }
 
-    html,body{
-      margin:0;
-      min-height:100%;
-      background:var(--bg);
-      color:var(--ink);
-      font-family:"Source Code Pro",monospace;
-      font-size:18px;
-      font-variant-numeric: tabular-nums;
-      position: relative;
-      overflow-x: hidden;
-    }
+  /* Optional HAL glow for red scope */
+  .scope svg{
+    filter: drop-shadow(0 0 2px rgba(255,26,26,0.35));
+  }
 
-    /* Master wrapper */
-    .wrap{ min-height:100vh; display:flex; align-items:flex-start; justify-content:center; }
-    .wrap.vcenter{ align-items:center; }
-    .stack{ width: min(var(--max-w), 95vw); display:flex; flex-direction:column; gap: var(--section-gap); }
+  /* filled center dot that uses --colMain */
+  .scope svg .dot{
+    fill: var(--colMain) !important;
+    stroke: none !important;
+  }
 
-    /* HEADER */
-    .header{ padding:14px 16px; background:var(--bg); display:flex; flex-direction:column; align-items:flex-start; }
-    .title-main { margin:0; padding:0.1em 0.3em 0.2em 0.5em; font-size:2.5rem; font-family:"Michroma",sans-serif;
-      background: var(--ghost); color: var(--bg); line-height:1.1; -webkit-text-stroke: 3px var(--bg); paint-order: stroke fill;
-      font-weight:bolder; transform:scaleX(1.1); letter-spacing:0.1em; border-radius:5px; }
-    .title-sub { margin-top:.4em; font-family:"Sono",sans-serif; font-size:1.25rem; font-weight:500; text-transform:uppercase;
-      letter-spacing:.15em; color:var(--ghost); transform:scaleX(1.05); margin-bottom:5rem}
+  /* 10px center dot that uses --colMain and never scales */
+  .scope .scope-dot{
+    position:absolute;
+    left:50%; top:50%;
+    width:20px; height:20px;
+    margin-left:-10px; margin-top:-10px; /* center it */
+    background: var(--colMain);
+    border-radius:50%;
+    pointer-events:none;
+    z-index:1; /* stays with the scope under the canvas */
+  }
 
-    /* WINDOW */
-    .window{ width:100%; max-width: var(--max-w); aspect-ratio: 1000 / 650; background:var(--bg);
-      border:1px solid var(--ghost); border-radius:0; overflow:hidden; }
-    .content{position:relative;width:100%;height:100%}
-    canvas{width:100%;height:100%;display:block}
+  /* Canvas on top of scope */
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+    position:relative;
+    z-index:2; /* above scope */
+  }
 
-    /* HUD */
-    .hud{ width:100%; align-self:end; font-size:1rem; letter-spacing:0.2rem; color:var(--ghost); opacity:.95; text-align:right;
-      font-family:"Source Code Pro",monospace; font-variant-numeric: tabular-nums; line-height:1.5rem; display:flex; flex-direction:column; margin-top:6rem; }
-    .hud .hud-group{ display:inline-block; text-align:right; align-self:flex-end; }
-    .hud .sep{ border-top:2px solid var(--faint); height:0; width:100%; margin:4px 0 6px; }
-
-    /* ===== Soft vignette overlay ===== */
-    body::before {
-      content:"";
-      position:fixed; inset:0; pointer-events:none; z-index:0;
-      background: radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(20,20,40,0.5) 100%);
-    }
+  /* HUD */
+  .hud{
+    width:100%; align-self:end; font-size:1rem; letter-spacing:0.2rem; color:var(--colMain); opacity:.95; text-align:right;
+    font-family:"Source Code Pro",monospace; font-variant-numeric: tabular-nums; line-height:1.5rem; display:flex; flex-direction:column; margin-top:1.25rem;
+  }
+  .hud .hud-group{ display:inline-block; text-align:right; align-self:flex-end; }
+  .hud .sep{ border-top:2px solid var(--colMain); height:0; width:100%; margin:4px 0 6px; }
   </style>
 </head>
 <body>
@@ -245,7 +166,84 @@
       <!-- WINDOW SECTION -->
       <section class="window">
         <div class="content">
-          <canvas id="cv" width="1000" height="650"></canvas>
+          <!-- STATIC SCOPE (behind canvas) -->
+          <div class="scope" aria-hidden="true">
+              <svg viewBox="0 0 3544 3544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M1640.97,8.299C1684.56,5.071 1728.59,3.428 1773,3.428C1817.41,3.428 1861.43,5.071 1905.02,8.299"/>
+                </g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M2644.37,233.292C2922.99,391.736 3154.58,623.766 3312.71,902.93"/>
+                </g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M3537.27,1643.7C3540.5,1687.37 3542.14,1731.48 3542.14,1775.98C3542.14,1820.47 3540.5,1864.58 3537.27,1908.26"/>
+                </g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M3312.71,2649.02C3154.58,2928.19 2922.99,3160.22 2644.37,3318.66"/>
+                </g>
+
+                <path d="M1771.65,3543.31L1771.65,3165.35"/>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M1905.02,3543.65C1861.43,3546.88 1817.41,3548.53 1773,3548.53C1728.59,3548.53 1684.56,3546.88 1640.97,3543.65"/>
+                </g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M901.632,3318.66C623.005,3160.22 391.421,2928.19 233.282,2649.02"/>
+                </g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M8.722,1908.26C5.5,1864.58 3.86,1820.47 3.86,1775.98C3.86,1731.48 5.5,1687.37 8.722,1643.7"/>
+                </g>
+
+                <path d="M3543.31,1771.65L3165.35,1771.65"/>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M233.282,902.93C391.421,623.766 623.005,391.736 901.632,233.292"/>
+                </g>
+
+                <!-- radial bars + rotated copies -->
+                <path d="M3307.09,3307.09L2422.95,2422.95"/>
+                <path d="M2222.55,2222.55L2022.15,2022.15"/>
+
+                <g transform="matrix(6.12323e-17,-1,1,6.12323e-17,0,3543.31)">
+                  <path d="M3307.09,3307.09L2422.95,2422.95"/>
+                  <path d="M2222.55,2222.55L2022.15,2022.15"/>
+                </g>
+                <g transform="matrix(-1,0,0,-1,3543.31,3543.31)">
+                  <path d="M3307.09,3307.09L2422.95,2422.95"/>
+                  <path d="M2222.55,2222.55L2022.15,2022.15"/>
+                </g>
+                <g transform="matrix(0,1,-1,0,3543.31,0)">
+                  <path d="M3307.09,3307.09L2422.95,2422.95"/>
+                  <path d="M2222.55,2222.55L2022.15,2022.15"/>
+                </g>
+
+                <!-- four outer rings -->
+                <g transform="matrix(0,-0.01147,0.01147,0,2301.34,1240.34)">
+                  <circle cx="1724.41" cy="1866.14" r="874.016"/>
+                </g>
+                <g transform="matrix(0,-0.01147,0.01147,0,2301.34,2342.54)">
+                  <circle cx="1724.41" cy="1866.14" r="874.016"/>
+                </g>
+                <g transform="matrix(0,-0.01147,0.01147,0,1199.14,2342.54)">
+                  <circle cx="1724.41" cy="1866.14" r="874.016"/>
+                </g>
+                <g transform="matrix(0,-0.01147,0.01147,0,1198.59,1239.78)">
+                  <circle cx="1724.41" cy="1866.14" r="874.016"/>
+                </g>
+
+                <path d="M0,1771.65L377.953,1771.65"/>
+                <path d="M1771.65,0L1771.65,377.953"/>
+
+                <!-- center ring = white / ink -->
+                <g transform="matrix(1.6621,0,0,1.6621,-1171.91,-1171.91)">
+                  <circle class="ink" cx="1770" cy="1770" r="210"/>
+                </g>
+                <circle class="dot" cx="1771.65" cy="1771.65" r="14"/>
+              </g>
+              </svg>
+              <div class="scope-dot" aria-hidden="true"></div>
+          </div>
+
+          <canvas id="cv" aria-label="Spin-axis docking visualizer"></canvas>
         </div>
       </section>
 
@@ -255,7 +253,6 @@
           <div>CO/ORD;PLOT 3</div>
           <div class="sep" aria-hidden="true"></div>
         </div>
-        <div id="bgname">bg: —</div>
         <div>θY   0.00°</div>
         <div>θX   0.00°</div>
         <div>spin 0.00°</div>
@@ -263,489 +260,309 @@
     </div>
   </div>
 
-<script>
-/* ===== Random background from HSV swatches ===== */
-(function(){
-  const root = document.documentElement;
-  const BG_VARS = [
-    '--bg-col-ATM-01','--bg-col-ATM-02','--bg-col-ATM-03','--bg-col-ATM-04','--bg-col-ATM-05','--bg-col-ATM-06','--bg-col-ATM-07','--bg-col-ATM-08','--bg-col-ATM-09',
-    '--bg-col-CNT-01','--bg-col-CNT-02','--bg-col-CNT-03','--bg-col-CNT-04','--bg-col-CNT-05','--bg-col-CNT-06','--bg-col-CNT-07','--bg-col-CNT-08','--bg-col-CNT-09',
-    '--bg-col-COM-01','--bg-col-COM-02','--bg-col-COM-03','--bg-col-COM-04','--bg-col-COM-05','--bg-col-COM-06','--bg-col-COM-07','--bg-col-COM-08','--bg-col-COM-09','--bg-col-COM-10','--bg-col-COM-11','--bg-col-COM-12','--bg-col-COM-13','--bg-col-COM-14','--bg-col-COM-15','--bg-col-COM-16','--bg-col-COM-17','--bg-col-COM-18','--bg-col-COM-19','--bg-col-COM-20',
-    '--bg-col-DMG-01','--bg-col-DMG-02','--bg-col-DMG-03','--bg-col-DMG-04','--bg-col-DMG-05','--bg-col-DMG-06','--bg-col-DMG-07','--bg-col-DMG-08','--bg-col-DMG-09','--bg-col-DMG-10','--bg-col-DMG-11','--bg-col-DMG-12','--bg-col-DMG-13','--bg-col-DMG-14','--bg-col-DMG-15','--bg-col-DMG-16','--bg-col-DMG-17','--bg-col-DMG-18','--bg-col-DMG-19','--bg-col-DMG-20','--bg-col-DMG-21','--bg-col-DMG-22','--bg-col-DMG-23','--bg-col-DMG-24',
-    '--bg-col-FLX-01','--bg-col-FLX-02','--bg-col-FLX-03','--bg-col-FLX-04','--bg-col-FLX-05','--bg-col-FLX-06','--bg-col-FLX-07','--bg-col-FLX-08','--bg-col-FLX-09','--bg-col-FLX-10',
-    '--bg-col-GDE-01','--bg-col-GDE-02','--bg-col-GDE-03','--bg-col-GDE-04','--bg-col-GDE-05','--bg-col-GDE-06','--bg-col-GDE-07','--bg-col-GDE-08','--bg-col-GDE-09','--bg-col-GDE-10','--bg-col-GDE-11','--bg-col-GDE-12','--bg-col-GDE-13','--bg-col-GDE-14','--bg-col-GDE-15','--bg-col-GDE-16','--bg-col-GDE-17',
-    '--bg-col-HIB-01','--bg-col-HIB-02','--bg-col-HIB-03','--bg-col-HIB-04','--bg-col-HIB-05','--bg-col-HIB-06','--bg-col-HIB-07','--bg-col-HIB-08','--bg-col-HIB-09','--bg-col-HIB-10','--bg-col-HIB-11','--bg-col-HIB-12','--bg-col-HIB-13','--bg-col-HIB-14',
-    '--bg-col-LIF-01','--bg-col-LIF-02','--bg-col-LIF-03','--bg-col-LIF-04','--bg-col-LIF-05','--bg-col-LIF-06','--bg-col-LIF-07','--bg-col-LIF-08',
-    '--bg-col-MEM-01','--bg-col-MEM-02','--bg-col-MEM-03','--bg-col-MEM-04','--bg-col-MEM-05','--bg-col-MEM-06','--bg-col-MEM-07','--bg-col-MEM-08','--bg-col-MEM-09','--bg-col-MEM-10','--bg-col-MEM-11',
-    '--bg-col-NAV-01','--bg-col-NAV-02','--bg-col-NAV-03','--bg-col-NAV-04','--bg-col-NAV-05','--bg-col-NAV-06','--bg-col-NAV-07','--bg-col-NAV-08','--bg-col-NAV-09','--bg-col-NAV-10','--bg-col-NAV-11','--bg-col-NAV-12',
-    '--bg-col-NUC-01','--bg-col-NUC-02','--bg-col-NUC-03','--bg-col-NUC-04','--bg-col-NUC-05','--bg-col-NUC-06','--bg-col-NUC-07','--bg-col-NUC-08','--bg-col-NUC-09',
-    '--bg-col-VEH-01','--bg-col-VEH-02','--bg-col-VEH-03','--bg-col-VEH-04','--bg-col-VEH-05','--bg-col-VEH-06','--bg-col-VEH-07','--bg-col-VEH-08','--bg-col-VEH-09','--bg-col-VEH-10','--bg-col-VEH-11','--bg-col-VEH-12'
-  ];
+  <!-- source curves -->
+  <script src="supporting_files/curves_bay.js"></script>
 
-  function parseHSV(str){
-    const m = str.trim().match(/^(-?\d+\.?\d*)\s+(\d+\.?\d*)%\s+(\d+\.?\d*)%$/);
-    if(!m) return null;
-    const h = parseFloat(m[1]);
-    const s = parseFloat(m[2]) / 100;
-    const v = parseFloat(m[3]) / 100;
-    return [h, s, v];
-  }
-  function hsvToHsl(h, s, v){
-    const l = v * (1 - s/2);
-    const denom = Math.min(l, 1 - l);
-    const sHsl = (denom === 0) ? 0 : ((v - l) / denom);
-    return [h, Math.max(0, Math.min(1, sHsl)), Math.max(0, Math.min(1, l))];
-  }
-  function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  <!-- Background initializer: obeys CSS-only config -->
+  <script>
+  (function(){
+    const root = document.documentElement;
 
-  const chosenVar = pickRandom(BG_VARS);
-  const raw = getComputedStyle(root).getPropertyValue(chosenVar);
-  const hsv = parseHSV(raw);
-  if(hsv){
-    const [h, sHsl, l] = hsvToHsl(hsv[0], hsv[1], hsv[2]);
-    const cssHsl = `hsl(${Math.round(((h%360)+360)%360)} ${Math.round(sHsl*100)}% ${Math.round(l*100)}%)`;
-    root.style.setProperty('--bg', cssHsl);
-    const label = document.getElementById('bgname');
-    if(label) label.textContent = `bg: ${chosenVar.replace('--bg-col-','')}  (${raw.trim()})`;
-  }
-})();
-</script>
+    // All swatch var names (defined in swatches.css)
+    const BG_VARS = [
+      '--bg-col-ATM-01','--bg-col-ATM-02','--bg-col-ATM-03','--bg-col-ATM-04','--bg-col-ATM-05','--bg-col-ATM-06','--bg-col-ATM-07','--bg-col-ATM-08','--bg-col-ATM-09',
+      '--bg-col-CNT-01','--bg-col-CNT-02','--bg-col-CNT-03','--bg-col-CNT-04','--bg-col-CNT-05','--bg-col-CNT-06','--bg-col-CNT-07','--bg-col-CNT-08','--bg-col-CNT-09',
+      '--bg-col-COM-01','--bg-col-COM-02','--bg-col-COM-03','--bg-col-COM-04','--bg-col-COM-05','--bg-col-COM-06','--bg-col-COM-07','--bg-col-COM-08','--bg-col-COM-09','--bg-col-COM-10','--bg-col-COM-11','--bg-col-COM-12','--bg-col-COM-13','--bg-col-COM-14','--bg-col-COM-15','--bg-col-COM-16','--bg-col-COM-17','--bg-col-COM-18','--bg-col-COM-19','--bg-col-COM-20',
+      '--bg-col-DMG-01','--bg-col-DMG-02','--bg-col-DMG-03','--bg-col-DMG-04','--bg-col-DMG-05','--bg-col-DMG-06','--bg-col-DMG-07','--bg-col-DMG-08','--bg-col-DMG-09','--bg-col-DMG-10','--bg-col-DMG-11','--bg-col-DMG-12','--bg-col-DMG-13','--bg-col-DMG-14','--bg-col-DMG-15','--bg-col-DMG-16','--bg-col-DMG-17','--bg-col-DMG-18','--bg-col-DMG-19','--bg-col-DMG-20','--bg-col-DMG-21','--bg-col-DMG-22','--bg-col-DMG-23','--bg-col-DMG-24',
+      '--bg-col-FLX-01','--bg-col-FLX-02','--bg-col-FLX-03','--bg-col-FLX-04','--bg-col-FLX-05','--bg-col-FLX-06','--bg-col-FLX-07','--bg-col-FLX-08','--bg-col-FLX-09','--bg-col-FLX-10',
+      '--bg-col-GDE-01','--bg-col-GDE-02','--bg-col-GDE-03','--bg-col-GDE-04','--bg-col-GDE-05','--bg-col-GDE-06','--bg-col-GDE-07','--bg-col-GDE-08','--bg-col-GDE-09','--bg-col-GDE-10','--bg-col-GDE-11','--bg-col-GDE-12','--bg-col-GDE-13','--bg-col-GDE-14','--bg-col-GDE-15','--bg-col-GDE-16','--bg-col-GDE-17',
+      '--bg-col-HIB-01','--bg-col-HIB-02','--bg-col-HIB-03','--bg-col-HIB-04','--bg-col-HIB-05','--bg-col-HIB-06','--bg-col-HIB-07','--bg-col-HIB-08','--bg-col-HIB-09','--bg-col-HIB-10','--bg-col-HIB-11','--bg-col-HIB-12','--bg-col-HIB-13','--bg-col-HIB-14',
+      '--bg-col-LIF-01','--bg-col-LIF-02','--bg-col-LIF-03','--bg-col-LIF-04','--bg-col-LIF-05','--bg-col-LIF-06','--bg-col-LIF-07','--bg-col-LIF-08',
+      '--bg-col-MEM-01','--bg-col-MEM-02','--bg-col-MEM-03','--bg-col-MEM-04','--bg-col-MEM-05','--bg-col-MEM-06','--bg-col-MEM-07','--bg-col-MEM-08','--bg-col-MEM-09','--bg-col-MEM-10','--bg-col-MEM-11',
+      '--bg-col-NAV-01','--bg-col-NAV-02','--bg-col-NAV-03','--bg-col-NAV-04','--bg-col-NAV-05','--bg-col-NAV-06','--bg-col-NAV-07','--bg-col-NAV-08','--bg-col-NAV-09','--bg-col-NAV-10','--bg-col-NAV-11','--bg-col-NAV-12',
+      '--bg-col-NUC-01','--bg-col-NUC-02','--bg-col-NUC-03','--bg-col-NUC-04','--bg-col-NUC-05','--bg-col-NUC-06','--bg-col-NUC-07','--bg-col-NUC-08','--bg-col-NUC-09',
+      '--bg-col-VEH-01','--bg-col-VEH-02','--bg-col-VEH-03','--bg-col-VEH-04','--bg-col-VEH-05','--bg-col-VEH-06','--bg-col-VEH-07','--bg-col-VEH-08','--bg-col-VEH-09','--bg-col-VEH-10','--bg-col-VEH-11','--bg-col-VEH-12'
+    ];
 
-<script>
-/* ===== Conditional vertical centering ===== */
-const wrap = document.getElementById('wrap');
-const stack = document.getElementById('stack');
-function adjustLayout(){
-  const fits = stack.offsetHeight + 1 <= window.innerHeight;
-  if(fits) wrap.classList.add('vcenter'); else wrap.classList.remove('vcenter');
-}
-window.addEventListener('load', adjustLayout);
-window.addEventListener('resize', adjustLayout);
-
-/* ===== Canvas 3D ===== */
-const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
-const HUD = document.getElementById('hud');
-const W = cv.width, H = cv.height;
-
-const targetMs = 33;
-const speedDeg = 0.02 + 0.55 * 0.06;
-const step = speedDeg * Math.PI/180;
-
-// Camera (random start each load)
-function deg(a){ return a * Math.PI / 180; }
-function rand(min, max){ return Math.random() * (max - min) + min; }
-const startYaw   = deg(rand(0, 360));
-const startPitch = deg(rand(-30, 30));
-const startDist  = rand(680, 880);
-const startSpin  = deg(rand(0, 360));  // ring phase
-const cam = { thetaY: startYaw, thetaX: startPitch, dist: startDist, f: 1100, cx: W/2, cy: H/2 };
-let spin = startSpin;
-
-window.onerror = (msg)=>{ if(HUD) HUD.textContent = 'ERR: '+msg; return true; };
-function setCanvasFont(){ ctx.font = '18px "Source Code Pro"'; ctx.fillStyle = '#fff'; }
-
-// ==== Math utils ====
-const norm = (v)=>{ const L=Math.hypot(v[0],v[1],v[2])||1; return [v[0]/L,v[1]/L,v[2]/L]; };
-const cross = (a,b)=>[ a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0] ];
-const dot = (a,b)=> a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
-const add = (a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
-const sub = (a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
-const scale = (v,k)=>[v[0]*k,v[1]*k,v[2]*k];
-const rotY = (p,t)=>{const c=Math.cos(t),s=Math.sin(t);return [p[0]*c+p[2]*s,p[1],-p[0]*s+p[2]*c]};
-const rotX = (p,t)=>{const c=Math.cos(t),s=Math.sin(t);return [p[0],p[1]*c-p[2]*s,p[1]*s+p[2]*c]};
-const rotZ = (p,t)=>{const c=Math.cos(t),s=Math.sin(t);return [p[0]*c-p[1]*s,p[0]*s+p[1]*c,p[2]]};
-function project(p){
-  let q=rotY(p,cam.thetaY); q=rotX(q,cam.thetaX);
-  const z=q[2]+cam.dist; if(!isFinite(z) || Math.abs(z) < 1e-3) return null;
-  return [cam.cx+cam.f*q[0]/z, cam.cy-cam.f*q[1]/z, z];
-}
-// Rodrigues rotation
-function rotAxis(p, axis, ang){
-  const u = norm(axis); const [x,y,z]=p; const [a,b,c]=u; const cos=Math.cos(ang), sin=Math.sin(ang);
-  const ux = b*z - c*y, uy = c*x - a*z, uz = a*y - b*x; const udotp = a*x + b*y + c*z;
-  return [ x*cos + ux*sin + a*udotp*(1-cos),
-           y*cos + uy*sin + b*udotp*(1-cos),
-           z*cos + uz*sin + c*udotp*(1-cos) ];
-}
-function rotateArray(arr, axis, ang){ return arr.map(p=>rotAxis(p, axis, ang)); }
-
-// ==== Curves ====
-function synthesize(seed=2001, N=480, tilt=0, curve=1){
-  let a=seed>>>0; const rnd=()=>{a+=0x6D2B79F5;let t=a; t=Math.imul(t^t>>>15, t|1); t^=t+Math.imul(t^t>>>7, t|61); return ((t^t>>>14)>>>0)/4294967296; };
-  const t = Array.from({length:N},(_,i)=> i/(N-1));
-  const ease=u=>u*u*(3-2*u);
-  const X = t.map(u=> -580*(1-ease(u)) + (10+2*curve)*Math.sin((2.2+0.2*curve)*u*Math.PI));
-  const Z = t.map(u=> (90+10*curve)*Math.sin(1.0*Math.PI*u) + 14*Math.exp(-2.1*u)*Math.sin((3.8+0.2*curve)*u+0.2));
-  const Y = t.map(u=> 18*Math.exp(-3.0*u)*Math.sin((5.6+0.5*curve)*u + 0.6) + tilt);
-  for(let i=0;i<N;i++){ Y[i]+= (rnd()*2-1)*0.18; Z[i]+= (rnd()*2-1)*0.18; }
-  return Array.from({length:N},(_,i)=>[X[i],Y[i],Z[i]]);
-}
-// Build geometry
-let trajMain = synthesize(2001, 480, 0, 1);
-let trajAltA = synthesize(7777, 360, 6, 0.6);
-let trajAltB = synthesize(3333, 380, -8, 1.4);
-
-// Align final tangent to Y-axis
-(function alignToSpinAxis(){
-  const n = trajMain.length; const p0 = trajMain[n-2], p1 = trajMain[n-1];
-  const t = norm(sub(p1,p0)); const target = [0,1,0];
-  const d = Math.max(-1, Math.min(1, dot(t,target))); const ang = Math.acos(d);
-  let axis = cross(t, target); const mag = Math.hypot(axis[0],axis[1],axis[2]); if(mag < 1e-6){ return; }
-  trajMain = rotateArray(trajMain, axis, ang);
-  trajAltA = rotateArray(trajAltA, axis, ang);
-  trajAltB = rotateArray(trajAltB, axis, ang);
-})();
-
-// Station center
-const stationCenter = trajMain[trajMain.length-1];
-
-// Helpers for hoops & corridor
-function tangentAt(traj, i){ const p0=traj[Math.max(0,i-2)], p1=traj[Math.min(traj.length-1,i+2)]; return norm(sub(p1,p0)); }
-function hoopAt(traj, i, R){
-  const c=traj[i]; const n=tangentAt(traj,i);
-  const ref=Math.abs(n[1])<0.95?[0,1,0]:[1,0,0];
-  const U=norm(cross(ref,n)); const V=cross(n,U);
-  const pts=[];
-  for(let a=0;a<=360;a+=6){ const r=a*Math.PI/180; pts.push( add(c, add(scale(U,R*Math.cos(r)), scale(V,R*Math.sin(r))) ) ); }
-  return pts;
-}
-const hoops = [ hoopAt(trajMain,Math.floor(trajMain.length*0.35),20),
-                hoopAt(trajMain,Math.floor(trajMain.length*0.60),70),
-                hoopAt(trajMain,Math.floor(trajMain.length*0.82),110) ];
-
-function curvedCorridor(){
-  const start = Math.floor(trajMain.length*0.70), end = trajMain.length-1;
-  const radius = 22; const stepIdx = 15;
-  const rings=[];
-  for(let i=start;i<=end;i+=stepIdx){ rings.push( hoopAt(trajMain, i, radius) ); }
-  return rings;
-}
-const tube = curvedCorridor();
-
-/* ==== Space Station V (two in-sync wheels) ==== */
-function arcPoints(R, y, a0Deg, a1Deg, stepDeg=6){
-  const pts=[];
-  for(let a=a0Deg; a<=a1Deg+1e-6; a+=stepDeg){
-    const r = (a*Math.PI)/180;
-    pts.push( add(stationCenter, [R*Math.cos(r), y, R*Math.sin(r)]) );
-  }
-  return pts;
-}
-function segmentedRing(R, y, segCount=4, gapDeg=26, stepDeg=6, phaseDeg=0){
-  const segs=[];
-  const span = 360/segCount;
-  for(let i=0;i<segCount;i++){
-    const start = i*span + gapDeg/2 + phaseDeg;
-    const end   = (i+1)*span - gapDeg/2 + phaseDeg;
-    segs.push( arcPoints(R, y, start, end, stepDeg) );
-  }
-  return segs;
-}
-function wheelRibsAt(R, y, phaseDeg, everyDeg=22.5, len=10){
-  const ribs=[];
-  for(let a=0; a<360; a+=everyDeg){
-    const deg = a + phaseDeg;
-    const r = (deg*Math.PI)/180;
-    const dir=[Math.cos(r),0,Math.sin(r)];
-    const p1 = add(stationCenter, [dir[0]*(R-len), y, dir[2]*(R-len)]);
-    const p2 = add(stationCenter, [dir[0]*(R+len), y, dir[2]*(R+len)]);
-    ribs.push([p1,p2]);
-  }
-  return ribs;
-}
-function stationGeomV(){
-  const hubR   = 68;
-  const outerR = 228;
-  const innerR = 172;
-  const spokeInR  = 108;
-  const spokeOutR = 214;
-  const gapY  = 14;
-
-  const phase = (spin * 180/Math.PI) % 360;
-
-  const wheels = [-gapY, +gapY].map(y => ({
-    outerSegs: segmentedRing(outerR, y, 4, 28, 6, phase),
-    innerSegs: segmentedRing(innerR, y, 4, 34, 6, phase),
-    ribsOuter: wheelRibsAt(outerR, y, phase, 22.5, 8),
-    ribsInner: wheelRibsAt(innerR, y, phase, 22.5, 7),
-    y
-  }));
-
-  const hubRing = arcPoints(hubR, 0, 0, 360, 6);
-
-  const spokeAngles = [0, 120, 240].map(a => (a + phase) % 360);
-  const spokes = spokeAngles.flatMap(aDeg=>{
-    const a = (aDeg*Math.PI)/180;
-    const dir=[Math.cos(a),0,Math.sin(a)];
-    return [-gapY, +gapY].map(y => {
-      const root = add(stationCenter, [dir[0]*hubR, 0, dir[2]*hubR]);
-      const midA = add(stationCenter, [dir[0]*spokeInR, y*0.5, dir[2]*spokeInR]);
-      const tip  = add(stationCenter, [dir[0]*spokeOutR, y,    dir[2]*spokeOutR]);
-      const perp=[-dir[2],0,dir[0]];
-      const w=18;
-      const tipL = add(tip, scale(perp, -w));
-      const tipR = add(tip, scale(perp,  w));
-      return { y, root, midA, tip, tipL, tipR };
-    });
-  });
-
-  const bridges = spokeAngles.map(aDeg=>{
-    const a = (aDeg*Math.PI)/180;
-    const dir=[Math.cos(a),0,Math.sin(a)];
-    const pLow = add(stationCenter, [dir[0]*(outerR-6), -gapY, dir[2]*(outerR-6)]);
-    const pUp  = add(stationCenter, [dir[0]*(outerR-6), +gapY, dir[2]*(outerR-6)]);
-    return [pLow, pUp];
-  });
-
-  const dockDeg = (phase + 18) % 360;
-  const dockR   = innerR - 12;
-  const dockW   = 40;
-  const dockH   = 18;
-  const dr = (dockDeg*Math.PI)/180;
-  const tdir = [Math.cos(dr), 0, Math.sin(dr)];
-  const yDock = -gapY;
-  const pC = add(stationCenter, [tdir[0]*dockR, yDock, tdir[2]*dockR]);
-  const tPerp = [-tdir[2],0,tdir[0]];
-  const dA = add(pC, add(scale(tPerp, -dockW), scale(tdir, -dockH)));
-  const dB = add(pC, add(scale(tPerp,  dockW), scale(tdir, -dockH)));
-  const dC = add(pC, add(scale(tPerp,  dockW), scale(tdir,  dockH)));
-  const dD = add(pC, add(scale(tPerp, -dockW), scale(tdir,  dockH)));
-  const dockRect = [dA,dB,dC,dD,dA];
-
-  return { hubRing, wheels, spokes, bridges, dockRect };
-}
-
-/* ===== Beacons along the main trajectory ===== */
-const beacons = [0.25, 0.5, 0.75].map(u => {
-  const i = Math.floor(u * (trajMain.length - 1));
-  const basePt = trajMain[i];
-  const tvec = tangentAt(trajMain, i);
-  const ref = Math.abs(tvec[1]) < 0.95 ? [0, 1, 0] : [1, 0, 0];
-  let Uv = cross(ref, tvec); let nU = Math.hypot(Uv[0],Uv[1],Uv[2]) || 1;
-  Uv = [Uv[0]/nU, Uv[1]/nU, Uv[2]/nU];
-  let Vv = cross(tvec, Uv); let nV = Math.hypot(Vv[0],Vv[1],Vv[2]) || 1;
-  Vv = [Vv[0]/nV, Vv[1]/nV, Vv[2]/nV];
-  const s = 12;
-  const apex = add(basePt, scale(tvec, 28));
-  const p2 = add(basePt, add(scale(Uv, s),  scale(Vv, s)));
-  const p3 = add(basePt, add(scale(Uv,-s),  scale(Vv, s)));
-  const p4 = add(basePt, add(scale(Uv,-s),  scale(Vv,-s)));
-  const p5 = add(basePt, add(scale(Uv, s),  scale(Vv,-s)));
-  return { apex, base:[p2,p3,p4,p5] };
-});
-
-// ==== Drawing helpers ====
-function linePath(pts){ if(!pts || !pts.length) return; ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]); }
-function drawDashedProjected(points, dash=6){
-  if(!points || points.length<2) return;
-  ctx.beginPath();
-  for(let i=1;i<points.length;i++){
-    if(i % (dash*2) < dash){ ctx.moveTo(points[i-1][0], points[i-1][1]); ctx.lineTo(points[i][0], points[i][1]); }
-  }
-  ctx.stroke();
-}
-
-// Grid
-function drawGrid(){
-  const ax = -14*Math.PI/180, az = 18*Math.PI/180;
-  const ex = [1,0,0], ez = [0,0,1];
-  let U = rotX(ex, ax); U = rotZ(U, az);
-  let V = rotX(ez, ax); V = rotZ(V, az);
-  U = norm(U); V = norm(V);
-  const O = [0,0,0];
-  const step=70, spanU=560, spanV=760, seg=22;
-  function lineU(u){ const pts=[]; for(let i=-seg;i<=seg;i++){ const t=i*(spanV/seg); const P=add(O, add(scale(U,u), scale(V,t))); const q=project(P); if(q) pts.push([q[0],q[1]]);} return pts; }
-  function lineV(v){ const pts=[]; for(let i=-seg;i<=seg;i++){ const t=i*(spanU/seg); const P=add(O, add(scale(U,t), scale(V,v))); const q=project(P); if(q) pts.push([q[0],q[1]]);} return pts; }
-  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--gridB')||'rgba(255,255,255,.16)'; ctx.lineWidth=1.8;
-  for(let u=-spanU; u<=spanU; u+=step){ const pts=lineU(u); if(pts.length>1){ linePath(pts); ctx.stroke(); } }
-  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--gridA')||'rgba(255,255,255,.28)'; ctx.lineWidth=2.2;
-  for(let v=-spanV; v<=spanV; v+=step){ const pts=lineV(v); if(pts.length>1){ linePath(pts); ctx.stroke(); } }
-}
-
-// Axes
-function drawAxes(){
-  setCanvasFont();
-  ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=2.4;
-  const o=project([0,0,0]), x=project([140,0,0]), y=project([0,140,0]), z=project([0,0,140]);
-  if(o&&x){ linePath([[o[0],o[1]],[x[0],x[1]]]); ctx.stroke(); }
-  if(o&&y){ linePath([[o[0],o[1]],[y[0],y[1]]]); ctx.stroke(); }
-  if(o&&z){ linePath([[o[0],o[1]],[z[0],z[1]]]); ctx.stroke(); }
-  ctx.fillStyle='#fff';
-  if(x) ctx.fillText('X / V-BAR', x[0]+8, x[1]+2);
-  if(y) ctx.fillText('Y / H-BAR', y[0]+8, y[1]+2);
-  if(z) ctx.fillText('Z / R-BAR', z[0]+8, z[1]+2);
-}
-
-// Station (two wheels)
-function drawStation(){
-  const s = stationGeomV();
-  const css = getComputedStyle(document.documentElement);
-  const colEdge = css.getPropertyValue('--ghost') || 'rgba(255,255,255,.70)';
-  const colFaint= css.getPropertyValue('--faint') || 'rgba(255,255,255,.45)';
-  const colAlt  = 'rgba(255,255,255,0.35)';
-
-  // hub
-  ctx.strokeStyle = colEdge; ctx.lineWidth = 2.0;
-  let pts = s.hubRing.map(p=>{const q=project(p); return q?[q[0],q[1]]:null}).filter(Boolean);
-  if(pts.length>1){ linePath(pts); ctx.stroke(); }
-
-  // wheels
-  s.wheels.forEach(w=>{
-    ctx.strokeStyle = colEdge; ctx.lineWidth = 2.0;
-    w.outerSegs.forEach(seg=>{
-      const pr = seg.map(p=>{const q=project(p); return q?[q[0],q[1]]:null}).filter(Boolean);
-      if(pr.length>1){ linePath(pr); ctx.stroke(); }
-    });
-    ctx.lineWidth = 1.9;
-    w.innerSegs.forEach(seg=>{
-      const pr = seg.map(p=>{const q=project(p); return q?[q[0],q[1]]:null}).filter(Boolean);
-      if(pr.length>1){ linePath(pr); ctx.stroke(); }
-    });
-    ctx.strokeStyle = colAlt; ctx.lineWidth = 1.4;
-    w.ribsOuter.forEach(([a,b])=>{ const A=project(a), B=project(b); if(A&&B){ linePath([[A[0],A[1]],[B[0],B[1]]]); ctx.stroke(); } });
-    ctx.lineWidth = 1.2;
-    w.ribsInner.forEach(([a,b])=>{ const A=project(a), B=project(b); if(A&&B){ linePath([[A[0],A[1]],[B[0],B[1]]]); ctx.stroke(); } });
-  });
-
-  // bridges
-  ctx.strokeStyle = colFaint; ctx.lineWidth = 1.6;
-  s.bridges.forEach(([p1,p2])=>{ const A=project(p1), B=project(p2); if(A&&B){ linePath([[A[0],A[1]],[B[0],B[1]]]); ctx.stroke(); } });
-
-  // spokes
-  ctx.strokeStyle = colFaint; ctx.lineWidth = 1.6;
-  s.spokes.forEach(sp=>{
-    const R=project(sp.root), M=project(sp.midA), T=project(sp.tip), L=project(sp.tipL), Rr=project(sp.tipR);
-    if(R&&M){ linePath([[R[0],R[1]],[M[0],M[1]]]); ctx.stroke(); }
-    if(M&&T){ linePath([[M[0],M[1]],[T[0],T[1]]]); ctx.stroke(); }
-    if(L&&T){ linePath([[L[0],L[1]],[T[0],T[1]]]); ctx.stroke(); }
-    if(Rr&&T){ linePath([[Rr[0],Rr[1]],[T[0],T[1]]]); ctx.stroke(); }
-    if(L&&Rr){ linePath([[L[0],L[1]],[Rr[0],Rr[1]]]); ctx.stroke(); }
-  });
-
-  // docking bay (lower wheel)
-  ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.6;
-  const dock2D = s.dockRect.map(p=>{const q=project(p); return q?[q[0],q[1]]:null}).filter(Boolean);
-  if(dock2D.length>=2){ linePath(dock2D); ctx.stroke(); }
-
-  // spin axis
-  ctx.strokeStyle='rgba(255,255,255,0.45)'; ctx.lineWidth=1.6;
-  const axisA=project(add(stationCenter,[0,-320,0])), axisB=project(add(stationCenter,[0,320,0]));
-  if(axisA&&axisB){ linePath([[axisA[0],axisA[1]],[axisB[0],axisB[1]]]); ctx.stroke(); }
-}
-
-// Corridor
-function drawCorridor(){
-  ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1.6;
-  const depth = tube.map(r=>({ ring:r, z: r.reduce((s,p)=>{ const q=project(p); return s + (q? q[2] : 0); },0)/r.length }));
-  depth.sort((a,b)=> b.z-a.z);
-  depth.forEach(({ring})=>{
-    const pts=ring.map(p=>{const q=project(p); return q?[q[0],q[1]]:null}).filter(Boolean);
-    if(pts.length>1){ linePath(pts); ctx.stroke(); }
-  });
-}
-
-// Beacons
-function drawBeacons(){
-  if(!beacons || !beacons.length) return;
-  ctx.strokeStyle='rgba(255,255,255,0.6)'; ctx.lineWidth=1.6;
-  beacons.forEach(b=>{
-    const A=project(b.apex); const Bs=b.base.map(p=>project(p)).filter(Boolean);
-    if(A && Bs.length){
-      Bs.forEach(bp=>{ linePath([[A[0],A[1]],[bp[0],bp[1]]]); ctx.stroke(); });
-      const base2D=Bs.map(q=>[q[0],q[1]]); base2D.push(base2D[0]); linePath(base2D); ctx.stroke();
+    function parseHSV(str){
+      const m = str.trim().match(/^(-?\d+\.?\d*)\s+(\d+\.?\d*)%\s+(\d+\.?\d*)%$/);
+      if(!m) return null;
+      const h = parseFloat(m[1]);
+      const s = parseFloat(m[2]) / 100;
+      const v = parseFloat(m[3]) / 100;
+      return [h, s, v];
     }
-  });
-}
-
-// Alt paths
-function drawAltTrajectories(){
-  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--alt')||'rgba(255,255,255,.55)'; ctx.lineWidth=1.6;
-  const altA = trajAltA.map(p=>{const q=project(p); return q?[q[0],q[1]]:null}).filter(Boolean); drawDashedProjected(altA, 5);
-  const altB = trajAltB.map(p=>{const q=project(p); return q?[q[0],q[1]]:null}).filter(Boolean); drawDashedProjected(altB, 7);
-}
-
-// Main trajectory
-function drawTrajectory(){
-  setCanvasFont();
-  const proj = trajMain.map(p=>{const q=project(p); return q?[q[0],q[1]]:null}).filter(Boolean);
-  if(proj.length<2) return;
-  ctx.strokeStyle='#fff'; ctx.lineWidth=2.3; ctx.lineCap='round'; ctx.lineJoin='round';
-  linePath(proj); ctx.stroke();
-  ctx.shadowColor='rgba(255,255,255,0.9)'; ctx.shadowBlur=8; ctx.fillStyle='#fff';
-  const idxs=[0.08,0.18,0.32,0.48,0.66,0.88].map(t=>Math.floor(t*(proj.length-1)));
-  const names=['A1','A2','B1','B2','C2','D3'];
-  idxs.forEach((idx,k)=>{
-    const pt=proj[Math.min(idx,proj.length-1)];
-    if(pt){
-      const [x,y]=pt; ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fill();
-      ctx.shadowBlur=0; ctx.fillText(names[k], x+10, y-10); ctx.shadowBlur=8;
+    function hsvToHsl(h, s, v){
+      const l = v * (1 - s/2);
+      const denom = Math.min(l, 1 - l);
+      const sHsl = (denom === 0) ? 0 : ((v - l) / denom);
+      return [h, Math.max(0, Math.min(1, sHsl)), Math.max(0, Math.min(1, l))];
     }
-  });
-  const last = proj[proj.length-1];
-  if(last){ ctx.shadowBlur=10; ctx.beginPath(); ctx.arc(last[0],last[1],6,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; }
-}
+    const pickRandom = arr => arr[Math.floor(Math.random()*arr.length)];
 
-// HUD
-function updateHUD(thetaY, thetaX, spinVal){
-  if(!HUD) return;
-  const degY = thetaY*180/Math.PI;
-  const degX = thetaX*180/Math.PI;
-  const spinDeg = spinVal*180/Math.PI;
-  const fmt = (v) => v.toFixed(2).padStart(6, ' ');
-  HUD.innerHTML =
-    `<div class="hud-group">
-       <div>CO/ORD;PLOT 3</div>
-       <div class="sep" aria-hidden="true"></div>
-     </div>`+
-    `<div>θY ${fmt(degY)}°</div>`+
-    `<div>θX ${fmt(degX)}°</div>`+
-    `<div>spin ${fmt(((spinDeg % 360)+360)%360)}°</div>`;
-}
+    function applyRandom(){
+      // try a few times in case a swatch var is empty
+      for(let i=0;i<5;i++){
+        const v = pickRandom(BG_VARS);
+        const raw = getComputedStyle(root).getPropertyValue(v);
+        const hsv = raw ? parseHSV(raw) : null;
+        if(hsv){
+          const [h, sHsl, l] = hsvToHsl(hsv[0], hsv[1], hsv[2]);
+          const css = `hsl(${Math.round(((h%360)+360)%360)} ${Math.round(sHsl*100)}% ${Math.round(l*100)}%)`;
+          root.style.setProperty('--bg', css);
+          return;
+        }
+      }
+      // fallback
+      applySolid();
+    }
+    function applySolid(){
+      const c = (getComputedStyle(root).getPropertyValue('--bg-solid') || '#171d32').trim();
+      root.style.setProperty('--bg', c);
+    }
 
-// Render & animate
-function render(){
-  ctx.clearRect(0,0,W,H);
-  drawGrid();
-  drawStation();
-  drawCorridor();
-  drawAltTrajectories();
-  const sortedHoops = hoops.map(r=>{
-    const zs=r.map(p=>{ const q=project(p); return q? q[2]:0; });
-    const z = zs.reduce((s,a)=>s+a,0)/Math.max(1,zs.length);
-    return {ring:r,z};
-  }).sort((a,b)=> b.z-a.z);
-  ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=2.0;
-  sortedHoops.forEach(({ring})=>{
-    const pts=ring.map(p=>{const q=project(p); return q?[q[0],q[1]]:null}).filter(Boolean);
-    if(pts.length>1){ linePath(pts); ctx.stroke(); }
-  });
-  drawAxes();
-  drawBeacons();
-  drawTrajectory();
-  updateHUD(cam.thetaY, cam.thetaX, spin);
-}
+    const mode = (getComputedStyle(root).getPropertyValue('--bg-mode') || 'random').trim();
+    if (mode === 'solid') applySolid(); else applyRandom();
+  })();
+  </script>
 
-let last=0;
-function loop(ts){
-  try{
-    if(ts-last>=targetMs){
-      cam.thetaY+=step;
-      cam.thetaX+=step*0.35;
-      spin += step*2.2;
+  <!-- Canvas + camera orbit (curves only) -->
+  <script>
+  const wrap = document.getElementById('wrap');
+  const stack = document.getElementById('stack');
+  function adjustLayout(){
+    const fits = stack.offsetHeight + 1 <= window.innerHeight;
+    if (fits) wrap.classList.add('vcenter'); else wrap.classList.remove('vcenter');
+  }
+  window.addEventListener('load', adjustLayout);
+  window.addEventListener('resize', adjustLayout);
+
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+
+  // Size canvas pixels to match CSS --max-w (square)
+  function sizeCanvasToCSS(){
+    const cssMax = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--max-w')) || 1000;
+    cv.width = cssMax;
+    cv.height = cssMax;
+  }
+  sizeCanvasToCSS();
+  window.addEventListener('resize', sizeCanvasToCSS);
+
+  const HUD = document.getElementById('hud');
+  let W = cv.width, H = cv.height;
+  const ro = new ResizeObserver(() => { W = cv.width; H = cv.height; });
+  ro.observe(cv);
+
+  const targetMs = 33;                                // ~30fps
+  const baseStep = (0.02 + 0.55 * 0.06) * Math.PI / 180;
+
+  // Projection mode
+  let ORTHO = true;
+  let ISO_SCALE = 1;
+  const FIT_MARGIN = 1.20;
+
+  // Camera
+  const cam = {
+    thetaX: 6 * Math.PI/180,
+    thetaY: 7 * Math.PI/180,
+    thetaZ: 10 * Math.PI/180,
+    dist: 2000,
+    f: 6000,
+    get cx(){ return W/2; },
+    get cy(){ return H/2; }
+  };
+
+  // Axis rotations
+  function rotY(p,t){ const c=Math.cos(t), s=Math.sin(t); return [ p[0]*c + p[2]*s, p[1], -p[0]*s + p[2]*c ]; }
+  function rotX(p,t){ const c=Math.cos(t), s=Math.sin(t); return [ p[0], p[1]*c - p[2]*s, p[1]*s + p[2]*c ]; }
+  function rotZ(p,t){ const c=Math.cos(t), s=Math.sin(t); return [ p[0]*c - p[1]*s, p[0]*s + p[1]*c, p[2] ]; }
+
+  // Projection
+  function project(p){
+    let q = rotZ(p, cam.thetaZ);
+    q = rotY(q, cam.thetaY);
+    q = rotX(q, cam.thetaX);
+
+    if (ORTHO){
+      return [ cam.cx + ISO_SCALE * q[0], cam.cy - ISO_SCALE * q[1], q[2] ];
+    } else {
+      const z = q[2] + cam.dist;
+      if (!isFinite(z) || Math.abs(z) < 1e-3) return null;
+      return [ cam.cx + cam.f * q[0] / z, cam.cy - cam.f * q[1] / z, z ];
+    }
+  }
+
+  // Blender Z-up → scene mapping: [x,y,z] → [x, z, −y]
+  function mapBlenderToScene(v){ return [ v[0], v[2], -v[1] ]; }
+
+  let mappedCurves = [];
+  let bbox = null;
+
+  (function prepareCurves(){
+    if (!window.CURVES_DATA || !CURVES_DATA.curves){ mappedCurves = []; return; }
+
+    mappedCurves = CURVES_DATA.curves.map(c => ({
+      name: c.name,
+      splines: c.splines.map(s => ({
+        cyclic: !!s.cyclic,
+        points: s.points.map(p => ({
+          co: mapBlenderToScene(p.co),
+          hL: mapBlenderToScene(p.hL),
+          hR: mapBlenderToScene(p.hR),
+        }))
+      }))
+    }));
+
+    // bbox on anchors
+    const mins = [ +Infinity, +Infinity, +Infinity ];
+    const maxs = [ -Infinity, -Infinity, -Infinity ];
+    for (const c of mappedCurves){
+      for (const s of c.splines){
+        for (const p of s.points){
+          for (let k=0;k<3;k++){
+            const v = p.co[k];
+            if (v < mins[k]) mins[k] = v;
+            if (v > maxs[k]) maxs[k] = v;
+          }
+        }
+      }
+    }
+    const center  = [ (mins[0]+maxs[0])/2, (mins[1]+maxs[1])/2, (mins[2]+maxs[2])/2 ];
+    const extents = [ maxs[0]-mins[0], maxs[1]-mins[1], maxs[2]-mins[2] ];
+    const radius  = Math.max(...extents) * 0.5 || 1;
+    bbox = { min:mins, max:maxs, center, radius };
+
+    // recenter to origin
+    for (const c of mappedCurves){
+      for (const s of c.splines){
+        for (const p of s.points){
+          // depth offset (viewer-Z)
+          const OFF_Z = -30;  // adjust as needed
+
+          p.co = [
+            p.co[0] - center[0],
+            p.co[1] - center[1],
+            (p.co[2] - center[2]) + OFF_Z
+          ];
+          p.hL = [
+            p.hL[0] - center[0],
+            p.hL[1] - center[1],
+            (p.hL[2] - center[2]) + OFF_Z
+          ];
+          p.hR = [
+            p.hR[0] - center[0],
+            p.hR[1] - center[1],
+            (p.hR[2] - center[2]) + OFF_Z
+          ];
+
+        }
+      }
+    }
+
+    // Auto-fit
+    if (ORTHO){
+      ISO_SCALE = (Math.min(W, H) * FIT_MARGIN) / (2 * (radius || 1));
+    } else {
+      // perspective fit if needed
+      // const scr = Math.min(W, H) * 0.40;
+      // cam.dist = Math.max(1, (cam.f * radius) / scr);
+    }
+  })();
+
+  function drawCurves(){
+    if (!mappedCurves || !mappedCurves.length) return;
+
+    // Pull styling from CSS variables
+    const styles = getComputedStyle(document.documentElement);
+    const bayWidth = parseFloat(styles.getPropertyValue('--bay-thickness')) || 2;
+    const inkColor = (styles.getPropertyValue('--colMain') || '#ffffff').trim();
+
+    ctx.save();
+    ctx.lineWidth = bayWidth;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = inkColor;
+    ctx.globalAlpha = 0.9;
+
+    const lineTo = (a,b)=>{ ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke(); };
+
+    for (const curve of mappedCurves){
+      for (const sp of curve.splines){
+        // Project all points & handles (handles may be missing)
+        const Praw = sp.points.map(p=>{
+          const C = project(p.co);
+          const L = p.hL ? project(p.hL) : null;
+          const R = p.hR ? project(p.hR) : null;
+          return C ? { co:[C[0],C[1]], hL: L? [L[0],L[1]]: null, hR: R? [R[0],R[1]]: null } : null;
+        }).filter(Boolean);
+        if (Praw.length < 2) continue;
+
+        // Bezier if all handles exist, else straight segments
+        const hasAllHandles = Praw.every(q => q.hL && q.hR);
+
+        if (hasAllHandles){
+          ctx.beginPath();
+          ctx.moveTo(Praw[0].co[0], Praw[0].co[1]);
+          for (let i=1;i<Praw.length;i++){
+            const a=Praw[i-1], b=Praw[i];
+            ctx.bezierCurveTo(a.hR[0],a.hR[1], b.hL[0],b.hL[1], b.co[0],b.co[1]);
+          }
+          if (sp.cyclic){
+            const a=Praw[Praw.length-1], b=Praw[0];
+            ctx.bezierCurveTo(a.hR[0],a.hR[1], b.hL[0],b.hL[1], b.co[0],b.co[1]);
+          }
+          ctx.stroke();
+        } else {
+          for (let i=1;i<Praw.length;i++){ lineTo(Praw[i-1].co, Praw[i].co); }
+          if (sp.cyclic){ lineTo(Praw[Praw.length-1].co, Praw[0].co); }
+        }
+      }
+    }
+
+    ctx.restore();
+  }
+
+  // HUD
+  const fmtDeg = (v) => {
+    let d = (v * 180 / Math.PI) % 360;
+    if (d < 0) d += 360;
+    return d.toFixed(2).padStart(6, '0');
+  };
+  function updateHUD(){
+    if (!HUD) return;
+    HUD.innerHTML =
+      `<div class="hud-group">
+         <div>CO/ORD;PLOT 3</div>
+         <div class="sep" aria-hidden="true"></div>
+       </div>` +
+      `<div>mode ${ORTHO ? 'ORTHO' : 'PERS'}</div>` +
+      `<div>θZ ${fmtDeg(cam.thetaZ)}°</div>` +
+      `<div>θY ${fmtDeg(cam.thetaY)}°</div>` +
+      `<div>θX ${fmtDeg(cam.thetaX)}°</div>`;
+  }
+
+  // Render & animate
+  function render(){
+    ctx.clearRect(0,0,W,H);
+    drawCurves();
+    updateHUD();
+  }
+
+  let last = 0;
+  function loop(ts){
+    if (ts - last >= targetMs){
+      cam.thetaX += baseStep * 0.002;
+      cam.thetaY += baseStep * 0.002;
+      cam.thetaZ += baseStep * 6;
       render();
-      last=ts;
+      last = ts;
     }
-  }catch(e){
-    console.error(e);
-    if(HUD) HUD.textContent = 'Render error: '+e.message;
+    requestAnimationFrame(loop);
   }
+
+  render();
   requestAnimationFrame(loop);
-}
-render(); requestAnimationFrame(loop);
-</script>
-
-
-
+  </script>
 </body>
 </html>
