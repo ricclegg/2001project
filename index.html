@@ -177,7 +177,8 @@
 
       // 2) Load app.js only after the partial exists
       const s = document.createElement('script');
-      s.src = '/assets/js/app.js?_=' + Date.now(); // root-relative + cache-bust
+      // resolves against the current page (works under /<repo>/ on GitHub Pages)
+      s.src = new URL('assets/js/app.js', location.href).toString() + `&_=${Date.now()}`;
       s.onload = () => {
         if (typeof initApp === 'function') {
           initApp();
