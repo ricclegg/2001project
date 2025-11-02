@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2001: A VFX Project</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Sono:wght@400;600;700&family=Source+Code+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Swatch variables moved out here (all --bg-col-... HSV triplets) -->
+  <link rel="stylesheet" href="supporting_files/swatches.css">
+
+  <style>
+  :root{
+    /* === Controls you’ll tweak === */
+    --bg-mode: solid;        /* random | solid */
+    --max-w: 800px;          /* cap the square window/canvas (e.g. 600px) */
+
+    /* define colors */
+    --gridA:rgba(255,255,255,.28);
+    --gridB:rgba(255,255,255,.16);
+    --colMain:rgba(255,255,255,.70);
+    --colFaint:rgba(255,255,255,.45);
+    --colAlt:rgba(255,100,100,0.55);
+    --colBG:rgba(10,10,10,1);
+    --section-gap:10px;
+
+    /* Scope & curve controls */
+    --scope: var(--colAlt);  /* #C65353 */
+    --scope-thickness: 5;     /* SVG stroke-width in device px (unitless OK) */
+    --bay-thickness: 2;       /* Canvas lineWidth in device px */
+  }
+
+  html,body{
+    margin:0;
+    min-height:100%;
+    background:var(--colBG);
+    color:var(--colMain);
+    font-family:"Source Code Pro",monospace;
+    font-size:18px;
+    font-variant-numeric: tabular-nums;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Master wrapper */
+  .wrap{ min-height:100vh; display:flex; align-items:flex-start; justify-content:center; }
+  .wrap.vcenter{ align-items:center; }
+  .stack{ width: min(var(--max-w), 95vw); display:flex; flex-direction:column; gap: var(--section-gap); }
+
+  /* HEADER */
+  .header{ padding:14px 16px; background:var(--colBG); display:flex; flex-direction:column; align-items:flex-start; }
+  .title-main {
+    margin:0;
+    padding:0.1em 0.3em 0.2em 0.5em;
+    font-size:2.5rem;
+    font-family:"Michroma",sans-serif;
+    background: var(--colMain);
+    color: var(--colBG);
+    line-height:1.1;
+    -webkit-text-stroke: 3px var(--colBG);
+    paint-order: stroke fill;
+    font-weight:bolder;
+    transform:scaleX(1.1);
+    letter-spacing:0.1em;
+    border-radius:5px;
+  }
+  .title-sub {
+    margin-top:.4em;
+    font-family:"Sono",sans-serif;
+    font-size:1.25rem;
+    font-weight:500;
+    text-transform:uppercase;
+    letter-spacing:.15em;
+    color:var(--colMain);
+    transform:scaleX(1.05);
+    margin-bottom:2.25rem;
+    padding-left:0rem; /* left-aligns with title-main's left padding */
+    margin-left: -8px;
+  }
+
+  /* WINDOW */
+  .window{
+    width:100%;
+    max-width: var(--max-w);
+    aspect-ratio: 1 / 1;   /* force square */
+    background:var(--colBG);
+    border:0px solid var(--colMain);
+    border-radius:0;
+    overflow:hidden;
+  }
+
+  /* Content layers */
+  .content{ position:relative; }
+
+  /* Scope overlay (behind canvas, static to camera) */
+  .scope{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+    z-index:1; /* behind canvas */
+  }
+
+  .scope svg{
+    width:100%;
+    height:100%;
+  }
+
+  /* Color + thickness for scope; add class="ink" to the white parts in SVG */
+  .scope svg *{
+    stroke: var(--scope) !important;
+    stroke-width: var(--scope-thickness) !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .scope svg .ink{
+    stroke: var(--colMain) !important;
+  }
+
+  /* Optional HAL glow for red scope */
+  .scope svg{
+    filter: drop-shadow(0 0 2px rgba(255,26,26,0.35));
+  }
+
+  /* filled center dot that uses --colMain */
+  .scope svg .dot{
+    fill: var(--colMain) !important;
+    stroke: none !important;
+  }
+
+  /* 10px center dot that uses --colMain and never scales */
+  .scope .scope-dot{
+    position:absolute;
+    left:50%; top:50%;
+    width:20px; height:20px;
+    margin-left:-10px; margin-top:-10px; /* center it */
+    background: var(--colMain);
+    border-radius:50%;
+    pointer-events:none;
+    z-index:1; /* stays with the scope under the canvas */
+  }
+
+  /* Canvas on top of scope */
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+    position:relative;
+    z-index:2; /* above scope */
+  }
+
+  /* HUD */
+  .hud{
+    width:100%; align-self:end; font-size:1rem; letter-spacing:0.2rem; color:var(--colMain); opacity:.95; text-align:right;
+    font-family:"Source Code Pro",monospace; font-variant-numeric: tabular-nums; line-height:1.5rem; display:flex; flex-direction:column; margin-top:1.25rem;
+  }
+  .hud .hud-group{ display:inline-block; text-align:right; align-self:flex-end; }
+  .hud .sep{ border-top:2px solid var(--colMain); height:0; width:100%; margin:4px 0 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="wrap">
+    <div class="stack" id="stack">
+      <!-- HEADER SECTION -->
+      <section class="header">
+        <h1 class="title-main">2001</h1>
+        <h2 class="title-sub">:A VFX PROJECT</h2>
+      </section>
+
+      <!-- WINDOW SECTION -->
+      <section class="window">
+        <div class="content">
+          <!-- STATIC SCOPE (behind canvas) -->
+          <div class="scope" aria-hidden="true">
+              <svg viewBox="0 0 3544 3544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M1640.97,8.299C1684.56,5.071 1728.59,3.428 1773,3.428C1817.41,3.428 1861.43,5.071 1905.02,8.299"/>
+                </g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M2644.37,233.292C2922.99,391.736 3154.58,623.766 3312.71,902.93"/>
+                </g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M3537.27,1643.7C3540.5,1687.37 3542.14,1731.48 3542.14,1775.98C3542.14,1820.47 3540.5,1864.58 3537.27,1908.26"/>
+                </g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M3312.71,2649.02C3154.58,2928.19 2922.99,3160.22 2644.37,3318.66"/>
+                </g>
+
+                <path d="M1771.65,3543.31L1771.65,3165.35"/>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M1905.02,3543.65C1861.43,3546.88 1817.41,3548.53 1773,3548.53C1728.59,3548.53 1684.56,3546.88 1640.97,3543.65"/>
+                </g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M901.632,3318.66C623.005,3160.22 391.421,2928.19 233.282,2649.02"/>
+                </g>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M8.722,1908.26C5.5,1864.58 3.86,1820.47 3.86,1775.98C3.86,1731.48 5.5,1687.37 8.722,1643.7"/>
+                </g>
+
+                <path d="M3543.31,1771.65L3165.35,1771.65"/>
+                <g transform="matrix(0.894604,0,0,0.892882,185.523,185.916)">
+                  <path d="M233.282,902.93C391.421,623.766 623.005,391.736 901.632,233.292"/>
+                </g>
+
+                <!-- radial bars + rotated copies -->
+                <path d="M3307.09,3307.09L2422.95,2422.95"/>
+                <path d="M2222.55,2222.55L2022.15,2022.15"/>
+
+                <g transform="matrix(6.12323e-17,-1,1,6.12323e-17,0,3543.31)">
+                  <path d="M3307.09,3307.09L2422.95,2422.95"/>
+                  <path d="M2222.55,2222.55L2022.15,2022.15"/>
+                </g>
+                <g transform="matrix(-1,0,0,-1,3543.31,3543.31)">
+                  <path d="M3307.09,3307.09L2422.95,2422.95"/>
+                  <path d="M2222.55,2222.55L2022.15,2022.15"/>
+                </g>
+                <g transform="matrix(0,1,-1,0,3543.31,0)">
+                  <path d="M3307.09,3307.09L2422.95,2422.95"/>
+                  <path d="M2222.55,2222.55L2022.15,2022.15"/>
+                </g>
+
+                <!-- four outer rings -->
+                <g transform="matrix(0,-0.01147,0.01147,0,2301.34,1240.34)">
+                  <circle cx="1724.41" cy="1866.14" r="874.016"/>
+                </g>
+                <g transform="matrix(0,-0.01147,0.01147,0,2301.34,2342.54)">
+                  <circle cx="1724.41" cy="1866.14" r="874.016"/>
+                </g>
+                <g transform="matrix(0,-0.01147,0.01147,0,1199.14,2342.54)">
+                  <circle cx="1724.41" cy="1866.14" r="874.016"/>
+                </g>
+                <g transform="matrix(0,-0.01147,0.01147,0,1198.59,1239.78)">
+                  <circle cx="1724.41" cy="1866.14" r="874.016"/>
+                </g>
+
+                <path d="M0,1771.65L377.953,1771.65"/>
+                <path d="M1771.65,0L1771.65,377.953"/>
+
+                <!-- center ring = white / ink -->
+                <g transform="matrix(1.6621,0,0,1.6621,-1171.91,-1171.91)">
+                  <circle class="ink" cx="1770" cy="1770" r="210"/>
+                </g>
+                <circle class="dot" cx="1771.65" cy="1771.65" r="14"/>
+              </g>
+              </svg>
+              <div class="scope-dot" aria-hidden="true"></div>
+          </div>
+
+          <canvas id="cv" aria-label="Spin-axis docking visualizer"></canvas>
+        </div>
+      </section>
+
+      <!-- HUD SECTION -->
+      <section class="hud" id="hud">
+        <div class="hud-group">
+          <div>CO/ORD;PLOT 3</div>
+          <div class="sep" aria-hidden="true"></div>
+        </div>
+        <div>θY   0.00°</div>
+        <div>θX   0.00°</div>
+        <div>spin 0.00°</div>
+      </section>
+    </div>
+  </div>
+
+  <!-- source curves -->
+  <script src="supporting_files/curves_bay.js"></script>
+
+  <!-- Background initializer: obeys CSS-only config -->
+  <script>
+  (function(){
+    const root = document.documentElement;
+
+    // All swatch var names (defined in swatches.css)
+    const BG_VARS = [
+      '--bg-col-ATM-01','--bg-col-ATM-02','--bg-col-ATM-03','--bg-col-ATM-04','--bg-col-ATM-05','--bg-col-ATM-06','--bg-col-ATM-07','--bg-col-ATM-08','--bg-col-ATM-09',
+      '--bg-col-CNT-01','--bg-col-CNT-02','--bg-col-CNT-03','--bg-col-CNT-04','--bg-col-CNT-05','--bg-col-CNT-06','--bg-col-CNT-07','--bg-col-CNT-08','--bg-col-CNT-09',
+      '--bg-col-COM-01','--bg-col-COM-02','--bg-col-COM-03','--bg-col-COM-04','--bg-col-COM-05','--bg-col-COM-06','--bg-col-COM-07','--bg-col-COM-08','--bg-col-COM-09','--bg-col-COM-10','--bg-col-COM-11','--bg-col-COM-12','--bg-col-COM-13','--bg-col-COM-14','--bg-col-COM-15','--bg-col-COM-16','--bg-col-COM-17','--bg-col-COM-18','--bg-col-COM-19','--bg-col-COM-20',
+      '--bg-col-DMG-01','--bg-col-DMG-02','--bg-col-DMG-03','--bg-col-DMG-04','--bg-col-DMG-05','--bg-col-DMG-06','--bg-col-DMG-07','--bg-col-DMG-08','--bg-col-DMG-09','--bg-col-DMG-10','--bg-col-DMG-11','--bg-col-DMG-12','--bg-col-DMG-13','--bg-col-DMG-14','--bg-col-DMG-15','--bg-col-DMG-16','--bg-col-DMG-17','--bg-col-DMG-18','--bg-col-DMG-19','--bg-col-DMG-20','--bg-col-DMG-21','--bg-col-DMG-22','--bg-col-DMG-23','--bg-col-DMG-24',
+      '--bg-col-FLX-01','--bg-col-FLX-02','--bg-col-FLX-03','--bg-col-FLX-04','--bg-col-FLX-05','--bg-col-FLX-06','--bg-col-FLX-07','--bg-col-FLX-08','--bg-col-FLX-09','--bg-col-FLX-10',
+      '--bg-col-GDE-01','--bg-col-GDE-02','--bg-col-GDE-03','--bg-col-GDE-04','--bg-col-GDE-05','--bg-col-GDE-06','--bg-col-GDE-07','--bg-col-GDE-08','--bg-col-GDE-09','--bg-col-GDE-10','--bg-col-GDE-11','--bg-col-GDE-12','--bg-col-GDE-13','--bg-col-GDE-14','--bg-col-GDE-15','--bg-col-GDE-16','--bg-col-GDE-17',
+      '--bg-col-HIB-01','--bg-col-HIB-02','--bg-col-HIB-03','--bg-col-HIB-04','--bg-col-HIB-05','--bg-col-HIB-06','--bg-col-HIB-07','--bg-col-HIB-08','--bg-col-HIB-09','--bg-col-HIB-10','--bg-col-HIB-11','--bg-col-HIB-12','--bg-col-HIB-13','--bg-col-HIB-14',
+      '--bg-col-LIF-01','--bg-col-LIF-02','--bg-col-LIF-03','--bg-col-LIF-04','--bg-col-LIF-05','--bg-col-LIF-06','--bg-col-LIF-07','--bg-col-LIF-08',
+      '--bg-col-MEM-01','--bg-col-MEM-02','--bg-col-MEM-03','--bg-col-MEM-04','--bg-col-MEM-05','--bg-col-MEM-06','--bg-col-MEM-07','--bg-col-MEM-08','--bg-col-MEM-09','--bg-col-MEM-10','--bg-col-MEM-11',
+      '--bg-col-NAV-01','--bg-col-NAV-02','--bg-col-NAV-03','--bg-col-NAV-04','--bg-col-NAV-05','--bg-col-NAV-06','--bg-col-NAV-07','--bg-col-NAV-08','--bg-col-NAV-09','--bg-col-NAV-10','--bg-col-NAV-11','--bg-col-NAV-12',
+      '--bg-col-NUC-01','--bg-col-NUC-02','--bg-col-NUC-03','--bg-col-NUC-04','--bg-col-NUC-05','--bg-col-NUC-06','--bg-col-NUC-07','--bg-col-NUC-08','--bg-col-NUC-09',
+      '--bg-col-VEH-01','--bg-col-VEH-02','--bg-col-VEH-03','--bg-col-VEH-04','--bg-col-VEH-05','--bg-col-VEH-06','--bg-col-VEH-07','--bg-col-VEH-08','--bg-col-VEH-09','--bg-col-VEH-10','--bg-col-VEH-11','--bg-col-VEH-12'
+    ];
+
+    function parseHSV(str){
+      const m = str.trim().match(/^(-?\d+\.?\d*)\s+(\d+\.?\d*)%\s+(\d+\.?\d*)%$/);
+      if(!m) return null;
+      const h = parseFloat(m[1]);
+      const s = parseFloat(m[2]) / 100;
+      const v = parseFloat(m[3]) / 100;
+      return [h, s, v];
+    }
+    function hsvToHsl(h, s, v){
+      const l = v * (1 - s/2);
+      const denom = Math.min(l, 1 - l);
+      const sHsl = (denom === 0) ? 0 : ((v - l) / denom);
+      return [h, Math.max(0, Math.min(1, sHsl)), Math.max(0, Math.min(1, l))];
+    }
+    const pickRandom = arr => arr[Math.floor(Math.random()*arr.length)];
+
+    function applyRandom(){
+      // try a few times in case a swatch var is empty
+      for(let i=0;i<5;i++){
+        const v = pickRandom(BG_VARS);
+        const raw = getComputedStyle(root).getPropertyValue(v);
+        const hsv = raw ? parseHSV(raw) : null;
+        if(hsv){
+          const [h, sHsl, l] = hsvToHsl(hsv[0], hsv[1], hsv[2]);
+          const css = `hsl(${Math.round(((h%360)+360)%360)} ${Math.round(sHsl*100)}% ${Math.round(l*100)}%)`;
+          root.style.setProperty('--colBG', css);
+          return;
+        }
+      }
+      // fallback
+      applySolid();
+    }
+    function applySolid(){
+      const c = (getComputedStyle(root).getPropertyValue('--colBG') || '#171d32').trim();
+      root.style.setProperty('--colBG', c);
+    }
+
+    const mode = (getComputedStyle(root).getPropertyValue('--bg-mode') || 'random').trim();
+    if (mode === 'solid') applySolid(); else applyRandom();
+  })();
+  </script>
+
+  <!-- Canvas + camera orbit (curves only) -->
+  <script>
+  const wrap = document.getElementById('wrap');
+  const stack = document.getElementById('stack');
+  function adjustLayout(){
+    const fits = stack.offsetHeight + 1 <= window.innerHeight;
+    if (fits) wrap.classList.add('vcenter'); else wrap.classList.remove('vcenter');
+  }
+  window.addEventListener('load', adjustLayout);
+  window.addEventListener('resize', adjustLayout);
+
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+
+  // Size canvas pixels to match CSS --max-w (square)
+  function sizeCanvasToCSS(){
+    const cssMax = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--max-w')) || 1000;
+    cv.width = cssMax;
+    cv.height = cssMax;
+  }
+  sizeCanvasToCSS();
+  window.addEventListener('resize', sizeCanvasToCSS);
+
+  const HUD = document.getElementById('hud');
+  let W = cv.width, H = cv.height;
+  const ro = new ResizeObserver(() => { W = cv.width; H = cv.height; });
+  ro.observe(cv);
+
+  const targetMs = 33;                                // ~30fps
+  const baseStep = (0.02 + 0.55 * 0.06) * Math.PI / 180;
+
+  // Projection mode
+  let ORTHO = false;
+  let ISO_SCALE = 1;
+  const FIT_MARGIN = 1.20;
+
+  // Camera
+  const cam = {
+    thetaX: -6 * Math.PI/180,
+    thetaY: 7 * Math.PI/180,
+    thetaZ: 10 * Math.PI/180,
+    dist: 200,
+    f: 2000,
+    get cx(){ return W/2; },
+    get cy(){ return H/2; }
+  };
+
+  // Flip the camera to the opposite side of the bay
+  cam.thetaY += Math.PI;
+
+  // Axis rotations
+  function rotY(p,t){ const c=Math.cos(t), s=Math.sin(t); return [ p[0]*c + p[2]*s, p[1], -p[0]*s + p[2]*c ]; }
+  function rotX(p,t){ const c=Math.cos(t), s=Math.sin(t); return [ p[0], p[1]*c - p[2]*s, p[1]*s + p[2]*c ]; }
+  function rotZ(p,t){ const c=Math.cos(t), s=Math.sin(t); return [ p[0]*c - p[1]*s, p[0]*s + p[1]*c, p[2] ]; }
+
+  // Projection
+  function project(p){
+    let q = rotZ(p, cam.thetaZ);
+    q = rotY(q, cam.thetaY);
+    q = rotX(q, cam.thetaX);
+
+    if (ORTHO){
+      return [ cam.cx + ISO_SCALE * q[0], cam.cy - ISO_SCALE * q[1], q[2] ];
+    } else {
+      const z = q[2] + cam.dist;
+      if (!isFinite(z) || Math.abs(z) < 1e-3) return null;
+      return [ cam.cx + cam.f * q[0] / z, cam.cy - cam.f * q[1] / z, z ];
+    }
+  }
+
+  // Blender Z-up → scene mapping: [x,y,z] → [x, z, −y]
+  function mapBlenderToScene(v){ return [ v[0], v[2], -v[1] ]; }
+
+  let mappedCurves = [];
+  let bbox = null;
+
+  (function prepareCurves(){
+    if (!window.CURVES_DATA || !CURVES_DATA.curves){ mappedCurves = []; return; }
+
+    mappedCurves = CURVES_DATA.curves.map(c => ({
+      name: c.name,
+      splines: c.splines.map(s => ({
+        cyclic: !!s.cyclic,
+        points: s.points.map(p => ({
+          co: mapBlenderToScene(p.co),
+          hL: mapBlenderToScene(p.hL),
+          hR: mapBlenderToScene(p.hR),
+        }))
+      }))
+    }));
+
+    // bbox on anchors
+    const mins = [ +Infinity, +Infinity, +Infinity ];
+    const maxs = [ -Infinity, -Infinity, -Infinity ];
+    for (const c of mappedCurves){
+      for (const s of c.splines){
+        for (const p of s.points){
+          for (let k=0;k<3;k++){
+            const v = p.co[k];
+            if (v < mins[k]) mins[k] = v;
+            if (v > maxs[k]) maxs[k] = v;
+          }
+        }
+      }
+    }
+    const center  = [ (mins[0]+maxs[0])/2, (mins[1]+maxs[1])/2, (mins[2]+maxs[2])/2 ];
+    const extents = [ maxs[0]-mins[0], maxs[1]-mins[1], maxs[2]-mins[2] ];
+    const radius  = Math.max(...extents) * 0.5 || 1;
+    bbox = { min:mins, max:maxs, center, radius };
+
+    // recenter to origin
+    for (const c of mappedCurves){
+      for (const s of c.splines){
+        for (const p of s.points){
+          // depth offset (viewer-Z)
+          const OFF_Z = -30;  // adjust as needed
+
+          p.co = [
+            p.co[0] - center[0],
+            p.co[1] - center[1],
+            (p.co[2] - center[2]) + OFF_Z
+          ];
+          p.hL = [
+            p.hL[0] - center[0],
+            p.hL[1] - center[1],
+            (p.hL[2] - center[2]) + OFF_Z
+          ];
+          p.hR = [
+            p.hR[0] - center[0],
+            p.hR[1] - center[1],
+            (p.hR[2] - center[2]) + OFF_Z
+          ];
+
+        }
+      }
+    }
+
+    // Auto-fit
+    if (ORTHO){
+      ISO_SCALE = (Math.min(W, H) * FIT_MARGIN) / (2 * (radius || 1));
+    } else {
+      // perspective fit if needed
+      // const scr = Math.min(W, H) * 0.40;
+      // cam.dist = Math.max(1, (cam.f * radius) / scr);
+    }
+  })();
+
+  function drawCurves(){
+    if (!mappedCurves || !mappedCurves.length) return;
+
+    // Pull styling from CSS variables
+    const styles = getComputedStyle(document.documentElement);
+    const bayWidth = parseFloat(styles.getPropertyValue('--bay-thickness')) || 2;
+    const inkColor = (styles.getPropertyValue('--colMain') || '#ffffff').trim();
+
+    ctx.save();
+    ctx.lineWidth = bayWidth;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = inkColor;
+    ctx.globalAlpha = 0.9;
+
+    const lineTo = (a,b)=>{ ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke(); };
+
+    for (const curve of mappedCurves){
+      for (const sp of curve.splines){
+        // Project all points & handles (handles may be missing)
+        const Praw = sp.points.map(p=>{
+          const C = project(p.co);
+          const L = p.hL ? project(p.hL) : null;
+          const R = p.hR ? project(p.hR) : null;
+          return C ? { co:[C[0],C[1]], hL: L? [L[0],L[1]]: null, hR: R? [R[0],R[1]]: null } : null;
+        }).filter(Boolean);
+        if (Praw.length < 2) continue;
+
+        // Bezier if all handles exist, else straight segments
+        const hasAllHandles = Praw.every(q => q.hL && q.hR);
+
+        if (hasAllHandles){
+          ctx.beginPath();
+          ctx.moveTo(Praw[0].co[0], Praw[0].co[1]);
+          for (let i=1;i<Praw.length;i++){
+            const a=Praw[i-1], b=Praw[i];
+            ctx.bezierCurveTo(a.hR[0],a.hR[1], b.hL[0],b.hL[1], b.co[0],b.co[1]);
+          }
+          if (sp.cyclic){
+            const a=Praw[Praw.length-1], b=Praw[0];
+            ctx.bezierCurveTo(a.hR[0],a.hR[1], b.hL[0],b.hL[1], b.co[0],b.co[1]);
+          }
+          ctx.stroke();
+        } else {
+          for (let i=1;i<Praw.length;i++){ lineTo(Praw[i-1].co, Praw[i].co); }
+          if (sp.cyclic){ lineTo(Praw[Praw.length-1].co, Praw[0].co); }
+        }
+      }
+    }
+
+    ctx.restore();
+  }
+
+  // HUD
+  const fmtDeg = (v) => {
+    let d = (v * 180 / Math.PI) % 360;
+    if (d < 0) d += 360;
+    return d.toFixed(2).padStart(6, '0');
+  };
+  function updateHUD(){
+    if (!HUD) return;
+    HUD.innerHTML =
+      `<div class="hud-group">
+         <div>CO/ORD;PLOT 3</div>
+         <div class="sep" aria-hidden="true"></div>
+       </div>` +
+      `<div>mode ${ORTHO ? 'ORTHO' : 'PERS'}</div>` +
+      `<div>θZ ${fmtDeg(cam.thetaZ)}°</div>` +
+      `<div>θY ${fmtDeg(cam.thetaY)}°</div>` +
+      `<div>θX ${fmtDeg(cam.thetaX)}°</div>`;
+  }
+
+  // Render & animate
+  function render(){
+    ctx.clearRect(0,0,W,H);
+    drawCurves();
+    updateHUD();
+  }
+
+  let last = 0;
+  function loop(ts){
+    if (ts - last >= targetMs){
+      cam.thetaX += baseStep * -0.2;
+      cam.thetaY += baseStep * -0.1;
+      cam.thetaZ += baseStep * -5;
+      render();
+      last = ts;
+    }
+    requestAnimationFrame(loop);
+  }
+
+  render();
+  requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
