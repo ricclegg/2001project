@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ORION → STATION V — Canvas (Spin-Axis Docking)</title>
+  <title>2001: A VFX Project</title>
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Sono:wght@400;600;700&family=Source+Code+Pro:wght@400;600;700&display=swap" rel="stylesheet">
@@ -55,9 +55,19 @@
   /* HEADER */
   .header{ padding:14px 16px; background:var(--bg); display:flex; flex-direction:column; align-items:flex-start; }
   .title-main {
-    margin:0; padding:0.1em 0.3em 0.2em 0.5em; font-size:2.5rem; font-family:"Michroma",sans-serif;
-    background: var(--colMain); color: var(--bg); line-height:1.1; -webkit-text-stroke: 3px var(--bg); paint-order: stroke fill;
-    font-weight:bolder; transform:scaleX(1.1); letter-spacing:0.1em; border-radius:5px;
+    margin:0;
+    padding:0.1em 0.3em 0.2em 0.5em;
+    font-size:2.5rem;
+    font-family:"Michroma",sans-serif;
+    background: var(--colMain);
+    color: var(--bg);
+    line-height:1.1;
+    -webkit-text-stroke: 3px var(--bg);
+    paint-order: stroke fill;
+    font-weight:bolder;
+    transform:scaleX(1.1);
+    letter-spacing:0.1em;
+    border-radius:5px;
   }
   .title-sub {
     margin-top:.4em;
@@ -69,7 +79,8 @@
     color:var(--colMain);
     transform:scaleX(1.05);
     margin-bottom:2.25rem;
-    padding-left:0.5em; /* left-aligns with title-main's left padding */
+    padding-left:0rem; /* left-aligns with title-main's left padding */
+    margin-left: -8px;
   }
 
   /* WINDOW */
@@ -358,20 +369,23 @@
   const baseStep = (0.02 + 0.55 * 0.06) * Math.PI / 180;
 
   // Projection mode
-  let ORTHO = true;
+  let ORTHO = false;
   let ISO_SCALE = 1;
   const FIT_MARGIN = 1.20;
 
   // Camera
   const cam = {
-    thetaX: 6 * Math.PI/180,
+    thetaX: -6 * Math.PI/180,
     thetaY: 7 * Math.PI/180,
     thetaZ: 10 * Math.PI/180,
-    dist: 2000,
-    f: 6000,
+    dist: 200,
+    f: 2000,
     get cx(){ return W/2; },
     get cy(){ return H/2; }
   };
+
+  // Flip the camera to the opposite side of the bay
+  cam.thetaY += Math.PI;
 
   // Axis rotations
   function rotY(p,t){ const c=Math.cos(t), s=Math.sin(t); return [ p[0]*c + p[2]*s, p[1], -p[0]*s + p[2]*c ]; }
@@ -552,9 +566,9 @@
   let last = 0;
   function loop(ts){
     if (ts - last >= targetMs){
-      cam.thetaX += baseStep * 0.002;
-      cam.thetaY += baseStep * 0.002;
-      cam.thetaZ += baseStep * 6;
+      cam.thetaX += baseStep * -0.2;
+      cam.thetaY += baseStep * -0.1;
+      cam.thetaZ += baseStep * -5;
       render();
       last = ts;
     }
